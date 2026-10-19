@@ -1,11 +1,9 @@
-# Ngine
-
+# Ngine  
 
 
 ## Run the application with Docker Compose
 
-From this directory, run `docker compose up`
-
+From this directory, run `docker compose up`  
 
 
 ## Run the application locally
@@ -20,8 +18,7 @@ From this directory, run `docker compose up`
 
 This starts the NestJS backend in watch mode and the Angular development server.
 Open the frontend at the URL in `FRONTEND_URL` (by default, `http://localhost:4200`);
-the backend listens on port `3000`.
-
+the backend listens on port `3000`.  
 
 
 ## Offical documentation
