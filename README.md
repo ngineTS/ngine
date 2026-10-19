@@ -2,11 +2,11 @@
 
 ## Run the application with docker compose
 
-   From this directory, run:
+From this directory, run:
 
-      ```sh
-         docker compose up
-      ```
+   ```sh
+      docker compose up
+   ```
 
 
 ## Run the application locally
