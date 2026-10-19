@@ -1,6 +1,6 @@
 # Ngine
 
-## Run the application with docker compose
+## Run the application with Docker Compose
 
 From this directory, run `docker compose up`
 
