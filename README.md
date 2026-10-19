@@ -2,20 +2,18 @@
 
 ## Run the application with docker compose
 
-From this directory, run `sh docker compose up`
+From this directory, run `docker compose up`
 
 
 ## Run the application locally
 
-1. Prerequisites:
-   Make sure PostgreSQL is running and available at `DB_HOST`/`DB_PORT` (defaults to `localhost:5432`) and Node.js (version >= 20) installed on your machine.
+1. Prerequisites: make sure PostgreSQL is running and available at `DB_HOST`/`DB_PORT` (defaults to `localhost:5432`) and Node.js (version >= 20) installed on your machine.
    
 2. From this directory, install both apps dependencies with: `npm install`
 
 3. Copy `.env.example` to `.env` in this directory and configure the values.
    
 4. From this directory, run `npm start`
-   ```
 
 This starts the NestJS backend in watch mode and the Angular development server.
 Open the frontend at the URL in `FRONTEND_URL` (by default, `http://localhost:4200`);
