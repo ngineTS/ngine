@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./apps/backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: docker
+      PORT: 3000
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SCHEMA: ${DB_SCHEMA}
+      FRONTEND_URL: ${FRONTEND_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      EMAIL_SERVICE: ${EMAIL_SERVICE}
+      EMAIL_ADDRESS: ${EMAIL_ADDRESS}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+    volumes:
+      - backend-uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      args:
+        API_URL: ${API_URL}
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
+  backend-uploads:
