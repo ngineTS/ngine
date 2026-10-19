@@ -2,7 +2,8 @@ CREATE SCHEMA "ngine";
 
 CREATE TABLE IF NOT EXISTS "ngine"."navigation" (
   "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  "parentId" uuid,
+  "groupId" uuid,
+  "parentGroupId" uuid,
   "name" varchar(100),
   "displayLabel" varchar(100),
   "description" varchar,
@@ -12,6 +13,8 @@ CREATE TABLE IF NOT EXISTS "ngine"."navigation" (
   "icon" varchar(100),
   "showIconOnly" boolean,
   "url" varchar,
+  "isDraft" boolean,
+  "unpublishedChanges" varchar(255)[],
   "createdBy" uuid,
   "createdDate" timestamp,
   "updatedBy" uuid,
@@ -22,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "ngine"."navigation" (
 
 CREATE INDEX idx_navigation_not_deleted
 ON "ngine"."navigation"
-USING btree ("parentId")
+USING btree ("parentGroupId")
 WHERE "deletedDate" IS NULL;
 
 CREATE TABLE IF NOT EXISTS "ngine"."navigation_type" (
@@ -125,7 +128,7 @@ CREATE TABLE IF NOT EXISTS "ngine"."permission" (
 CREATE TABLE IF NOT EXISTS "ngine"."role_navigation_permission" (
 	"id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
 	"roleId" uuid NOT NULL,
-	"navigationId" uuid,
+	"navigationGroupId" uuid,
 	"permissionId" uuid NOT NULL,
 	"createdBy" uuid,
 	"createdDate" timestamp,
@@ -208,7 +211,7 @@ CREATE TABLE IF NOT EXISTS "ngine"."typography_style" (
 CREATE TABLE IF NOT EXISTS "ngine"."menu" (
 	"id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
 	"navigationId" uuid,
-  "isVertical" boolean
+    "isVertical" boolean
 );
 
 CREATE TABLE IF NOT EXISTS "ngine"."app_setting" (
@@ -286,7 +289,7 @@ INSERT INTO "ngine"."role" ("name", "displayLabel", "description", "isDisabled")
 VALUES ('super-admin', 'Super Admin', 'Super admin role', false);
 
 -- Insert super admin role navigation permission --
-INSERT INTO "ngine"."role_navigation_permission" ("roleId", "navigationId", "permissionId")
+INSERT INTO "ngine"."role_navigation_permission" ("roleId", "navigationGroupId", "permissionId")
 VALUES (
 	(select id from "ngine"."role" where name = 'super-admin'),
     '00000000-0000-0000-0000-000000000000',
@@ -298,11 +301,11 @@ INSERT INTO "ngine"."role" ("name", "displayLabel", "description", "isDisabled")
 VALUES ('guest', 'Guest', 'This role is assigned only to users without account.', false);
 
 -- Insert guest role navigation permission --
-INSERT INTO "ngine"."role_navigation_permission" ("roleId", "navigationId", "permissionId")
+INSERT INTO "ngine"."role_navigation_permission" ("roleId", "navigationGroupId", "permissionId")
 VALUES (
 	(select id from "ngine"."role" where "name" = 'guest'),
     '00000000-0000-0000-0000-000000000000',
-    (select id from "ngine"."permission" where priority = 4)
+    (select id from "ngine"."permission" where priority = 3)
 );
 
 -- insert guest user --
@@ -316,10 +319,24 @@ VALUES (
     (select id from "ngine"."role" where "name" = 'guest')
 );
 
--- Insert global navigation --
-INSERT INTO ngine."navigation" ("id", "name", "displayLabel", "order", "navigationTypeId", "parentId")
+-- Insert roots navigations --
+INSERT INTO ngine."navigation" ("id", "groupId", "isDraft", "name", "displayLabel", "order", "navigationTypeId", "parentGroupId")
 VALUES (
 	'00000000-0000-0000-0000-000000000000',
+	'00000000-0000-0000-0000-000000000000',
+	false,
+	'global',
+	'Global',
+	0,
+	(select id from "ngine".navigation_type where name = 'redirect-button'), 
+	null
+);
+
+INSERT INTO ngine."navigation" ("id", "groupId", "isDraft", "name", "displayLabel", "order", "navigationTypeId", "parentGroupId")
+VALUES (
+	'11111111-1111-1111-1111-111111111111',
+	'00000000-0000-0000-0000-000000000000',
+	true,
 	'global',
 	'Global',
 	0,

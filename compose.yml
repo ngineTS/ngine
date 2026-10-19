@@ -16,7 +16,8 @@ services:
 
   backend:
     build:
-      context: ./apps/backend
+      context: .
+      dockerfile: apps/backend/Dockerfile
     ports:
       - "3000:3000"
     environment:
@@ -34,6 +35,8 @@ services:
       EMAIL_SERVICE: ${EMAIL_SERVICE}
       EMAIL_ADDRESS: ${EMAIL_ADDRESS}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET_KEY: ${STRIPE_WEBHOOK_SECRET_KEY}
     volumes:
       - backend-uploads:/app/uploads
     depends_on:
@@ -42,7 +45,8 @@ services:
 
   frontend:
     build:
-      context: ./apps/frontend
+      context: .
+      dockerfile: apps/frontend/Dockerfile
       args:
         API_URL: ${API_URL}
     ports:
