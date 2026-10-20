@@ -40,9 +40,3 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
-
-# Env files
-src/environments/*
-
-# Do not ignore environment tamplate file 
-!src/environments/environment-template.ts
