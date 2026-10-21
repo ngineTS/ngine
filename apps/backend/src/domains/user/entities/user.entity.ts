@@ -1,4 +1,3 @@
-import { Role } from "src/domains/role/entities/role.entity";
 import { UserRole } from "src/domains/user-role/entities/user-role.entity";
 import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
