@@ -337,4 +337,7 @@ export class NavigationManagementComponent implements OnInit {
     (event.target as HTMLImageElement).src = '../../../../assets/images/component-default-image-1.png';
   }
 
+  openFeaturesDocumentation() {
+    window.open('https://ngine.dev/documentation/feature-library', '_blank', 'noopener,noreferrer');
+  }
 }
