@@ -1,4 +1,4 @@
-import { Component, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, SimpleChanges, ViewChild } from '@angular/core';
 import { Color, NgxChartsModule, ScaleType } from '@swimlane/ngx-charts';
 import { UserEventService } from '../../core/services/user-event.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -15,6 +15,8 @@ export class AnalyticComponent extends NavigationBaseComponent {
 
   constructor(public _userEventService: UserEventService) { super(); }
 
+  @ViewChild('analyticContainer') analyticContainer!: ElementRef<HTMLDivElement>;
+  
   connectionChartData: Array<{
     name: string; 
     series: Array<{
@@ -58,12 +60,12 @@ export class AnalyticComponent extends NavigationBaseComponent {
   }
 
   ngAfterViewInit() {
-    this.connectionChartDimensions = [Number(this._navigation.containerLayout.width! * window.innerWidth / 100) * 0.88, 0]
+    this.connectionChartDimensions = [this.analyticContainer.nativeElement.offsetWidth * 0.88 || 0, 0]
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {
     if (simpleChanges["_sizeChanged"]) {
-      this.connectionChartDimensions = [Number(this._navigation.containerLayout.width! * window.innerWidth / 100) * 0.88, 0]
+      this.connectionChartDimensions = [this.analyticContainer.nativeElement.offsetWidth * 0.88 || 0, 0]
     }
   }
 }
