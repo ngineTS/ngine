@@ -33,7 +33,7 @@ export class ComponentsContainer implements OnInit {
   constructor(
     private _route: ActivatedRoute,
     private _containerLayoutService: ContainerLayoutService,
-    private _componentsContainerService: ComponentsContainerService,
+    public _componentsContainerService: ComponentsContainerService,
   ) { }
 
   /** The components container. */
@@ -54,7 +54,7 @@ export class ComponentsContainer implements OnInit {
   onResize() {
     this.windowWidth = window.innerWidth;
     this.windowHeight = window.innerHeight;
-    this._componentsContainerService.currentWidth = this.componentsContainerRef.nativeElement.offsetWidth;
+    this._componentsContainerService.currentWidthPx = this.componentsContainerRef.nativeElement.offsetWidth;
   }
 
   /**
@@ -80,26 +80,34 @@ export class ComponentsContainer implements OnInit {
    * Lifecycle hook called after the component view has been initialized.
    */
   ngAfterViewInit() {
-    this._componentsContainerService.currentWidth = this.componentsContainerRef.nativeElement.offsetWidth;
+    this._componentsContainerService.currentWidthPx = this.componentsContainerRef.nativeElement.offsetWidth;
   }
 
   
   /**
    * Method called when drag ends.
    * 
-   * Get dragged navigation position, convert it to percentage of screen size and save it.
+   * 1. Get dragged navigation position and convert it to percentage of view port.
+   * 2. Update container height if needed
+   * 3. Save navigation position
    * 
    * @param event The cdkDragEnd event.
    * @param navigation The navigation dragged.
    */
   onDragEnded(event: CdkDragEnd, navigation: Navigation) {
+    /* 1 */
     const position = event.source.getFreeDragPosition();
-
     const navigationPosition = {
       xPos: Math.round(position.x / window.innerWidth * 10000) / 100,
       yPos: Math.round(position.y / window.innerHeight * 10000) / 100,
     }
 
+    /* 2 */
+    this._componentsContainerService.setUpCurrentHeightInPx(
+      position.y + (navigation.containerLayout.height! * window.innerHeight / 100)
+    );
+
+    /* 3 */
     // Prevent dragging beyond top screen border
     if (navigationPosition.yPos < 0) {
       navigationPosition.yPos = 0;

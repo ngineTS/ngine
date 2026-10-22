@@ -157,6 +157,9 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
   createSizeObserver() {
     this.observer = new ResizeObserver(() => {
       if (this.isMouseOver) this.isResizing = true;
+      this._componentsContainerService.setUpCurrentHeightInPx(
+        Number(this._navigation.containerLayout.yPos) * window.innerHeight / 100 + this.navigationDiv.nativeElement.scrollHeight
+      );
     });
 
     this.observer.observe(this.navigationDiv.nativeElement);
@@ -290,7 +293,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Resize navigation to match the screen size.
    */
   onFullScreenClick() {
-    const width = this._componentsContainerService.currentWidth! / this.windowWidth * 97.5;
+    const width = this._componentsContainerService.currentWidthPx! / this.windowWidth * 97.5;
     const height = 99;
     const xPos = 1;
     this._navigation.containerLayout.width = width;

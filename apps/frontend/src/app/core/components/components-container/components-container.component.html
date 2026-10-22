@@ -1,5 +1,5 @@
 
-<div #componentsContainer [class]="windowWidth > windowWidthLimit ? '' : 'small-screen-flex'" class="components-container">
+<div #componentsContainer [class]="windowWidth > windowWidthLimit ? '' : 'small-screen-flex'" class="components-container" [style.height.px]="_componentsContainerService.currentHeightPx">
     
     <!-- Banner -->
     <app-banner [navigationGroupId]="navigation.groupId"></app-banner>
