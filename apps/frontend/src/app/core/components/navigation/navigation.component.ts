@@ -149,7 +149,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
 
   /**
    * Create size observer on navigation.
-   * On size change detection, show 'save/reset' buttons.
+   * On size change detection, show 'save/reset' buttons and update container height if needed.
    *
    * `isMouseOver` property allows to intercept resizing applied by user
    * and exclude resizing due to screen size change.
