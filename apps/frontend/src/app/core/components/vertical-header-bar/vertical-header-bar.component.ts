@@ -14,7 +14,6 @@ import { StylePayload } from '../../models/menu.interface';
 import { MatDialog } from '@angular/material/dialog';
 import { EmptyDialogComponent } from '../empty-dialog/empty-dialog.component';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { HeaderBarService } from '../../services/header-bar.service';
 import { StyleService } from '../../services/style.service';
 import { BannerComponent } from '../banner/banner.component';
 
@@ -45,7 +44,6 @@ export class VerticalHeaderBarComponent implements OnInit {
     private _typographyStyleService: TypographyStyleService,
     private _sideNavService: SideNavService,
     private _matDialog: MatDialog,
-    private _headerBarService: HeaderBarService,
     private _styleService: StyleService,
   ) { }
 
@@ -75,14 +73,6 @@ export class VerticalHeaderBarComponent implements OnInit {
     this.navigation = this._route.snapshot.data["navigation"];
     this.windowWidth = window.innerWidth;
     this._navigationService.sortNavigationsByOrder(this.navigation);
-    this._headerBarService.activeVerticalBarsNumber++;
-  }
-
-  /**
-   * Lifecycle hook called after the component has been destroyed.
-   */
-  ngOnDestroy() {
-    this._headerBarService.activeVerticalBarsNumber--;
   }
 
   /**

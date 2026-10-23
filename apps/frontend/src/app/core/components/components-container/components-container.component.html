@@ -1,5 +1,5 @@
 
-<div #componentsContainer [class]="windowWidth > windowWidthLimit ? '' : 'small-screen-flex'" class="components-container" [style.height.px]="_componentsContainerService.currentHeightPx">
+<div #componentsContainer [class]="windowWidth > windowWidthLimit ? '' : 'small-screen-flex'" class="components-container" [style.height.px]="currentHeightPx">
     
     <!-- Banner -->
     <app-banner [navigationGroupId]="navigation.groupId"></app-banner>
@@ -29,6 +29,7 @@
                     [_navigation]="child"
                     [_canEdit]="child.permissionName?.includes('edit')"
                     [_canDelete]="child.permissionName?.includes('delete')"
+                    (onSizeChange)="onSizeChange($event)"
                 >
                 </app-navigation>
             </div>

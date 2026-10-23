@@ -42,6 +42,8 @@ export class ComponentsContainer implements OnInit {
   windowWidth!: number;
   /** The window height. */
   windowHeight!: number;
+  /** The current height in px. Used to set height for sticky vertical header bar. */
+  currentHeightPx: number = 0;
   /** Responsive threasold */
   windowWidthLimit = 750;
   /** The HTML container */
@@ -88,8 +90,9 @@ export class ComponentsContainer implements OnInit {
    * Method called when drag ends.
    * 
    * 1. Get dragged navigation position and convert it to percentage of view port.
-   * 2. Update container height if needed
-   * 3. Save navigation position
+   * 2. Prevent user to drop outside container.
+   * 3. Compute container height based on navigation position.
+   * 4. Save navigation position
    * 
    * @param event The cdkDragEnd event.
    * @param navigation The navigation dragged.
@@ -103,11 +106,6 @@ export class ComponentsContainer implements OnInit {
     }
 
     /* 2 */
-    this._componentsContainerService.setUpCurrentHeightInPx(
-      position.y + (navigation.containerLayout.height! * window.innerHeight / 100)
-    );
-
-    /* 3 */
     // Prevent dragging beyond top screen border
     if (navigationPosition.yPos < 0) {
       navigationPosition.yPos = 0;
@@ -118,12 +116,51 @@ export class ComponentsContainer implements OnInit {
       navigationPosition.xPos = 0;
     }
 
+    /* 3 */
+    const boxRect = event.source.element.nativeElement.getBoundingClientRect();
+    const navigationTop = boxRect.top - (position.y < 0 ? position.y : 0);
+    const navigationHeight = boxRect.height;
+    this.computeContainerHeight(navigationTop, navigationHeight);
+
+    /* 4 */
     this._containerLayoutService.updateContainerLayout(navigation, navigationPosition)
       .pipe(take(1))
       .subscribe(() => {
         navigation.containerLayout.xPos = navigationPosition.xPos;
         navigation.containerLayout.yPos = navigationPosition.yPos;
       });
+  }
+
+  /**
+   * Output event called when child navigation is resized.
+   * 
+   * @param event The navigation size information emitted.
+   */
+  onSizeChange(event: { navigationTopPx: number; navigationHeightPx: number }) {
+    this.computeContainerHeight(event.navigationTopPx, event.navigationHeightPx);
+  }
+
+  /**
+   * Comput container height.
+   * 
+   * This is only used to allow vertical header bar sticky position.
+   * Explanations: As navigations are absolutely positioned, container height remains unset,
+   * which leads on veritical header bar container height unset
+   * thus prevents vertical header bar to be sticky when scrolling.
+   * 
+   * To solve this, we manually setup the height of the container, based on the bottom edge of the lowest navigation.
+   * An offset of 5px is given to avoid display issue.
+   * 
+   * @param navigationTopPx The navigation top edge position in px.
+   * @param navigationHeightPx The navigation height in px.
+   */
+  computeContainerHeight(navigationTopPx: number, navigationHeightPx: number) {
+    const relativeTop = navigationTopPx - this.componentsContainerRef.nativeElement.getBoundingClientRect().top;
+    const navigationBottomEdgePx = relativeTop + navigationHeightPx;
+
+    if (navigationBottomEdgePx > this.currentHeightPx) {
+        this.currentHeightPx = navigationBottomEdgePx + 5;
+    }
   }
 
 }

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ComponentRef, ElementRef, HostListener, inject, Injector, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, Component, ComponentRef, ElementRef, EventEmitter, HostListener, inject, Injector, OnDestroy, OnInit, Output, ViewChild, ViewContainerRef } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -35,6 +35,11 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
 
   /* The injector to use as the parent for the dynamic component. */
   injector = inject(Injector);
+  /** The size change event emitter to inform parent about navigation size changes. */
+  @Output('onSizeChange') onSizeChange: EventEmitter<{
+    navigationTopPx: number;
+    navigationHeightPx: number;
+  }> = new EventEmitter();
   /* The HTML container of the dynamic component. */
   @ViewChild('container', { read: ViewContainerRef }) container!: ViewContainerRef;
   /* The HTML container of the navigation. */
@@ -102,11 +107,19 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
   /**
    * Lifecycle hook called after component template has been initialized.
    * 
-   * Load component and create navigation size observer.
+   * - Load component.
+   * - Create navigation size observer.
+   * - Emit once the navigation top and height information to parent.
    */
   ngAfterViewInit(): void {
     this.loadComponent();
     this.createSizeObserver();
+    setTimeout(() => {
+      this.onSizeChange.emit({
+        navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
+        navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
+      });
+    }, 500);
   }
 
   /**
@@ -149,17 +162,21 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
 
   /**
    * Create size observer on navigation.
-   * On size change detection, show 'save/reset' buttons and update container height if needed.
+   * On size change detection, show 'save/reset' buttons
+   * and emit navigation top and and height information to parent.
    *
    * `isMouseOver` property allows to intercept resizing applied by user
    * and exclude resizing due to screen size change.
    */
   createSizeObserver() {
     this.observer = new ResizeObserver(() => {
-      if (this.isMouseOver) this.isResizing = true;
-      this._componentsContainerService.setUpCurrentHeightInPx(
-        Number(this._navigation.containerLayout.yPos) * window.innerHeight / 100 + this.navigationDiv.nativeElement.scrollHeight
-      );
+      if (this.isMouseOver) {
+        this.isResizing = true;
+        this.onSizeChange.emit({
+          navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
+          navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
+        });
+      }
     });
 
     this.observer.observe(this.navigationDiv.nativeElement);
@@ -168,7 +185,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
   /**
    * Methods called on 'Save size' button click.
    * - calcul width and height % based on screen size
-   * - update container layout width and height
+   * - update navigation container layout width and height
    */
   onSaveSizeClick(): void {
     const navigationSize = {

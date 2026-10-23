@@ -16,7 +16,6 @@ import { DeepFormConfig } from '../../models/form-input.interface';
 import { ContainerStyleService } from '../../services/container-style.service';
 import { SideNavService } from '../../services/side-nav.service';
 import { ContainerLayout } from '../../models/container-layout.interface';
-import { HeaderBarService } from '../../services/header-bar.service';
 import { StyleService } from '../../services/style.service';
 import { BannerComponent } from '../banner/banner.component';
 
@@ -49,7 +48,6 @@ export class HeaderBarComponent implements OnInit {
     private _typographyStyleService: TypographyStyleService,
     private _sideNavService: SideNavService,
     public _styleService: StyleService,
-    public _headerBarService: HeaderBarService,
   ) { }
 
   /** The navigations container. */
@@ -60,8 +58,6 @@ export class HeaderBarComponent implements OnInit {
   windowWidthLimit = 1000;
   /** Boolean to inform if one of the items of navigation bar is being dragged. */
   isDragging = false;
-  /** Boolean to hide navigation bar when user click on 'Hide menu'.*/
-  isNavigationBarHidden = false;
   /** HTML drop zone */
   @ViewChild('dropZone') dropZone: ElementRef<HTMLDivElement> | undefined;
   
