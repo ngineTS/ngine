@@ -109,16 +109,12 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * 
    * - Load component.
    * - Create navigation size observer.
-   * - Emit once the navigation top and height information to parent.
    */
   ngAfterViewInit(): void {
     this.loadComponent();
     this.createSizeObserver();
     setTimeout(() => {
-      this.onSizeChange.emit({
-        navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
-        navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
-      });
+      this.createSizeObserver();
     }, 500);
   }
 
@@ -172,11 +168,12 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
     this.observer = new ResizeObserver(() => {
       if (this.isMouseOver) {
         this.isResizing = true;
-        this.onSizeChange.emit({
-          navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
-          navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
-        });
       }
+
+      this.onSizeChange.emit({
+        navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
+        navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
+      });
     });
 
     this.observer.observe(this.navigationDiv.nativeElement);
