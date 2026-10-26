@@ -1,10 +1,10 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { AppService } from './core/services/app.service';
 import { jwtDecode } from "jwt-decode";
 import { AuthService } from './core/auth/services/auth.service';
 import { UserEventService } from './core/services/user-event.service';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { filter, firstValueFrom, map, Observable } from 'rxjs';
 import { AsyncPipe, Location } from '@angular/common';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
@@ -67,18 +67,19 @@ export class AppComponent implements OnInit {
       this._styleService.styleToCopy = null;
   }
 
-    @HostListener('document:keydown.escape', ['$event'])
-    onDocumentEscape(event: KeyboardEvent): void {
-      event.preventDefault();
-      document.body.classList.remove('copy-style-mode');
-      this._styleService.isCopyingStyle = false;
-      this._styleService.styleToCopy = null;
-    }
+  @HostListener('document:keydown.escape', ['$event'])
+  onDocumentEscape(event: KeyboardEvent): void {
+    event.preventDefault();
+    document.body.classList.remove('copy-style-mode');
+    this._styleService.isCopyingStyle = false;
+    this._styleService.styleToCopy = null;
+  }
 
   title = 'ngine-frontend';
   refreshTokenIntervalOffset = 60; //seconds
   refreshTokenIntervalId: NodeJS.Timeout | undefined;
   showFiller = false;
+  @ViewChild('drawerContent', { read: ElementRef }) drawerContent!: ElementRef<HTMLElement>;
   @ViewChild('drawer') drawer!: MatDrawer
   sideNavFormConfiguration: GenericFormDialogData<Record<string, any>> | null = null;
   appBackgroundColor$: Observable<string> | undefined;
@@ -116,6 +117,19 @@ export class AppComponent implements OnInit {
         this._router.initialNavigation();
       }
     }, 125);
+  }
+
+  /**
+   * Lifecycle hook called after application has initialized.
+   * 
+   * Scroll top after each routing event.
+   */
+  ngAfterViewInit(): void {
+    this._router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+          this.drawerContent.nativeElement.scrollTop = 0;
+      });
   }
 
   /**

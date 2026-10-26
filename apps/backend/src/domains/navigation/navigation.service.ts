@@ -569,7 +569,7 @@ export class NavigationService {
       // get 'draft' and 'publish' record for given navigation group id and store group id.
       const draftAndPublishNavigations = await this._navigationRepository.find({
         take: 2,
-        relations: ['menu'],
+        relations: ['menu', 'children'],
         where: { groupId: navigation.groupId }
       });
       navigationGroupIds.push(navigation.groupId);
@@ -911,7 +911,7 @@ export class NavigationService {
    * 
    * @returns A promise of an array of navigations.
    */
-  async getRedirectButtons() {
+  getRedirectButtons() {
     return this._navigationRepository.find({
       relations: ['navigationType'],
       where: {

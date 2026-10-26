@@ -1,20 +1,19 @@
 // Main container with flex layout
 .vertical-bar-container {
   display: flex;
-  height: 100vh;
+  align-items: flex-start;
 
+  .navigation-sidebar-box {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+  }
   // Left sidebar with navigation
   .navigation-sidebar {
+    height: 100%;
     display: flex;
     flex-direction: column;
-    width: 20%;
-    height: 100%;
-    border-right: 1px solid #e0e0e0;
     overflow-y: auto;
-    padding-right: 8px;
-    padding-top: 20px;
-    padding-bottom: 4px;
-    position: relative;
     scrollbar-width: thin;
 
     // Header section
@@ -43,7 +42,6 @@
   // Content wrapper on the right
   .content-wrapper {
     flex: 1;
-    overflow-y: auto;
   }
 }
 
@@ -181,13 +179,19 @@
 @media (max-width: 750px) {
   .vertical-bar-container {
     flex-direction: column;
+    align-items: unset;
+
+    .navigation-sidebar-box {
+      height: fit-content;
+      padding: 0 !important;
+    }
 
     .navigation-sidebar {
-      width: 100%;
+      width: 100% !important;
       height: auto;
       border-right: none;
       border-bottom: 1px solid #e0e0e0;
-      max-height: 25vh;
+      max-height: 20vh;
       margin: 0px !important;
       border-radius: 0px !important;
       border-width: 1px !important;

@@ -4,54 +4,58 @@
 <div class="vertical-bar-container">
   
   <!-- Left sidebar with navigation tree -->
-  <div class="navigation-sidebar drop-zone"
-    [style.background-color]="navigation.menu.containerStyle.isBackgroundTransparent
-        ? 'transparent' : navigation.menu.containerStyle.backgroundColor"
-    [style.border]="navigation.menu.containerStyle.borderWidth + 'px ' +
-        navigation.menu.containerStyle.borderStyle + ' ' +
-        navigation.menu.containerStyle.borderColor"
-    [style.border-top-style]="navigation.menu.containerStyle.isBorderTopHidden ?
-        'none' : navigation.menu.containerStyle.borderStyle"
-    [style.border-right-style]="navigation.menu.containerStyle.isBorderRightHidden ?
-        'none' : navigation.menu.containerStyle.borderStyle"
-    [style.border-bottom-style]="navigation.menu.containerStyle.isBorderBottomHidden ?
-        'none' : navigation.menu.containerStyle.borderStyle"
-    [style.border-left-style]="navigation.menu.containerStyle.isBorderLeftHidden ?
-        'none' : navigation.menu.containerStyle.borderStyle"
-    [style.border-top-left-radius.px]="navigation.menu.containerStyle.borderTopLeftRadius"
-    [style.border-top-right-radius.px]="navigation.menu.containerStyle.borderTopRightRadius"
-    [style.border-bottom-right-radius.px]="navigation.menu.containerStyle.borderBottomRightRadius"
-    [style.border-bottom-left-radius.px]="navigation.menu.containerStyle.borderBottomLeftRadius"
-    [style.margin-top.px]="navigation.menu.containerLayout.marginTop"
-    [style.margin-right.px]="navigation.menu.containerLayout.marginRight"
-    [style.margin-bottom.px]="navigation.menu.containerLayout.marginBottom"
-    [style.margin-left.px]="navigation.menu.containerLayout.marginLeft"
-    [style.padding-top.px]="navigation.menu.containerLayout.paddingTop"
-    cdkDropList
-    (cdkDropListDropped)="drop($event, navigation)"
-    [cdkDropListData]="navigation.children!"
-    [cdkDropListDisabled]="!navigation.permissionName?.includes('edit') || !(windowWidth > windowWidthLimit)"
+  <div class="navigation-sidebar-box"
+    [style.padding-top.px]="navigation.menu.containerLayout.marginTop"
+    [style.padding-bottom.px]="navigation.menu.containerLayout.marginBottom"
   >
-    
-    <!-- Header with logo and controls -->
-    @if (navigation.level === 0) {
-      <img class="logo" src="../../../../assets/images/ngine_logo.png" (click)="navigateToRootUrl()" />
-    }
-    
-    @if (navigation.permissionName?.includes('edit')) {
-      <div class="header-controls">
-        @if (windowWidth > windowWidthLimit) {  
+    <div class="navigation-sidebar drop-zone"
+      [style.width.px]="navigation.menu.containerLayout.width"
+      [style.background-color]="navigation.menu.containerStyle.isBackgroundTransparent
+          ? 'transparent' : navigation.menu.containerStyle.backgroundColor"
+      [style.border]="navigation.menu.containerStyle.borderWidth + 'px ' +
+          navigation.menu.containerStyle.borderStyle + ' ' +
+          navigation.menu.containerStyle.borderColor"
+      [style.border-top-style]="navigation.menu.containerStyle.isBorderTopHidden ?
+          'none' : navigation.menu.containerStyle.borderStyle"
+      [style.border-right-style]="navigation.menu.containerStyle.isBorderRightHidden ?
+          'none' : navigation.menu.containerStyle.borderStyle"
+      [style.border-bottom-style]="navigation.menu.containerStyle.isBorderBottomHidden ?
+          'none' : navigation.menu.containerStyle.borderStyle"
+      [style.border-left-style]="navigation.menu.containerStyle.isBorderLeftHidden ?
+          'none' : navigation.menu.containerStyle.borderStyle"
+      [style.border-top-left-radius.px]="navigation.menu.containerStyle.borderTopLeftRadius"
+      [style.border-top-right-radius.px]="navigation.menu.containerStyle.borderTopRightRadius"
+      [style.border-bottom-right-radius.px]="navigation.menu.containerStyle.borderBottomRightRadius"
+      [style.border-bottom-left-radius.px]="navigation.menu.containerStyle.borderBottomLeftRadius"
+      [style.padding-top.px]="navigation.menu.containerLayout.paddingTop"
+      [style.padding-bottom.px]="navigation.menu.containerLayout.paddingBottom"
+      [style.padding-left.px]="navigation.menu.containerLayout.paddingLeft"
+      [style.padding-right.px]="navigation.menu.containerLayout.paddingRight"
+      cdkDropList
+      (cdkDropListDropped)="drop($event, navigation)"
+      [cdkDropListData]="navigation.children!"
+      [cdkDropListDisabled]="!navigation.permissionName?.includes('edit') || !(windowWidth > windowWidthLimit)"
+    >
+      
+      <!-- Header with logo and controls -->
+      @if (navigation.level === 0) {
+        <img class="logo" src="../../../../assets/images/ngine_logo.png" (click)="navigateToRootUrl()" />
+      }
+      
+      @if (navigation.permissionName?.includes('edit') && windowWidth > windowWidthLimit) {
+        <div class="header-controls">
           <i class="bi bi-marker-tip edit-icon" 
             (click)="editMenuStyle()"
             [matTooltip]="'Edit navigation bar style'">
           </i>
-        }
-        <i class="bi bi-plus edit-icon" 
-          (click)="manageNavigation($event)"
-          [matTooltip]="'Add navigation'">
-        </i>
-        <!-- If global navigation then we show the publish button on the header bar -->
-        @if (!navigation.parentGroupId && navigation.unpublishedChanges.length > 0) {
+        
+          <i class="bi bi-plus edit-icon" 
+            (click)="manageNavigation($event)"
+            [matTooltip]="'Add navigation'">
+          </i>
+
+          <!-- If global navigation then we show the publish button on the header bar -->
+          @if (!navigation.parentGroupId && navigation.unpublishedChanges.length > 0) {
             <i class="bi bi-upload edit-icon publish-menu-icon" [matMenuTriggerFor]="publishMenu"
             ></i>
 
@@ -63,22 +67,23 @@
                     Cancel changes
                 </button>
             </mat-menu>
-        }
-      </div>
-    }
+          }
+        </div>
+      }
 
-    <!-- Navigation tree -->
-    @for (child of navigation.children; track child.id) {
-      <div cdkDrag [cdkDragDisabled]="!navigation.permissionName?.includes('edit') || !(windowWidth > windowWidthLimit)">
-        <ng-container *ngTemplateOutlet="treeNode; context: {
-          $implicit: child,
-          parentPath: [], 
-          containerStyle: child.containerStyle,
-          typographyStyle: child.typographyStyle,
-          treeLevel: 0,
-        }"></ng-container>
-      </div>
-    }
+      <!-- Navigation tree -->
+      @for (child of navigation.children; track child.id) {
+        <div cdkDrag [cdkDragDisabled]="!navigation.permissionName?.includes('edit') || !(windowWidth > windowWidthLimit)">
+          <ng-container *ngTemplateOutlet="treeNode; context: {
+            $implicit: child,
+            parentPath: [], 
+            containerStyle: child.containerStyle,
+            typographyStyle: child.typographyStyle,
+            treeLevel: 0,
+          }"></ng-container>
+        </div>
+      }
+    </div>
   </div>
 
   <!-- Right content area -->

@@ -14,7 +14,7 @@ export class ComponentsContainerService {
      * It is used in navigation component to make the box fit the full available width 
      * via the 'full screen' button.
      */
-    currentWidth: number | undefined;
+    currentWidthPx: number | undefined;
 
     /**
      * The user global navigation permission.
