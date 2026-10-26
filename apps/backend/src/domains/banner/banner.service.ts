@@ -3,7 +3,7 @@ import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Banner } from './entities/banner.entity';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class BannerService {
@@ -25,8 +25,14 @@ export class BannerService {
   }
 
   findOneByNavigationId(navigationGroupId: string) {
+    const now = new Date();
+
     return this._bannerRepository.findOne({
-      where: { navigationId: navigationGroupId },
+      where: {
+        navigationId: navigationGroupId,
+        startDate: LessThanOrEqual(now),
+        endDate: MoreThanOrEqual(now),
+      },
     });
   }
 

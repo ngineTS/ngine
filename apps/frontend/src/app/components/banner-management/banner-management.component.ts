@@ -48,14 +48,14 @@ export class BannerManagementComponent extends NavigationBaseComponent {
     this.bannerFormConfig = {
       startDate: {
         value: new Date(),
-        alias: 'Start Date (UTC)',
+        alias: 'Start Date',
         order: 2,
         validators: [Validators.required],
         type: 'date-and-time'
       },
       endDate: {
         value: new Date(),
-        alias: 'End Date (UTC)',
+        alias: 'End Date',
         order: 3,
         validators: [Validators.required],
         type: 'date-and-time'
