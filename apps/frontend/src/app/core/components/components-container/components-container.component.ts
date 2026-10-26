@@ -50,7 +50,7 @@ export class ComponentsContainer implements OnInit {
   @ViewChild('componentsContainer') componentsContainerRef!: ElementRef<HTMLDivElement>;
 
   /**
-   * Get window size each time it changes (zoom, screen resize...).
+   * Get window size and container width each window is resized (zoom, screen resize...).
    */
   @HostListener('window:resize')
   onResize() {
@@ -80,6 +80,9 @@ export class ComponentsContainer implements OnInit {
 
   /**
    * Lifecycle hook called after the component view has been initialized.
+   * 
+   * Store container width, used in navigation component
+   * to compute component width in % when it is resized.
    */
   ngAfterViewInit() {
     this._componentsContainerService.currentWidthPx = this.componentsContainerRef.nativeElement.offsetWidth;
@@ -87,12 +90,12 @@ export class ComponentsContainer implements OnInit {
 
   
   /**
-   * Method called when drag ends.
+   * Method called when component drag ends.
    * 
-   * 1. Get dragged navigation position and convert it to percentage of view port.
+   * 1. Get drag position and convert it to percentage of view port.
    * 2. Prevent user to drop outside container.
-   * 3. Compute container height based on navigation position.
-   * 4. Save navigation position
+   * 3. Calcul container height based on navigation position.
+   * 4. Save navigation position.
    * 
    * @param event The cdkDragEnd event.
    * @param navigation The navigation dragged.
@@ -110,7 +113,6 @@ export class ComponentsContainer implements OnInit {
     if (navigationPosition.yPos < 0) {
       navigationPosition.yPos = 0;
     }
-
     // Prevent dragging beyond left screen border
     if (navigationPosition.xPos < 0) {
       navigationPosition.xPos = 0;
@@ -134,6 +136,8 @@ export class ComponentsContainer implements OnInit {
   /**
    * Output event called when child navigation is resized.
    * 
+   * Compute container height.
+   * 
    * @param event The navigation size information emitted.
    */
   onSizeChange(event: { navigationTopPx: number; navigationHeightPx: number }) {
@@ -143,9 +147,8 @@ export class ComponentsContainer implements OnInit {
   /**
    * Comput container height.
    * 
-   * This is only used to allow vertical header bar sticky position.
+   * The objective of this method is to enable vertical header bar sticky position.
    * Explanations: As navigations are absolutely positioned, container height remains unset,
-   * which leads on veritical header bar container height unset
    * thus prevents vertical header bar to be sticky when scrolling.
    * 
    * To solve this, we manually setup the height of the container, based on the bottom edge of the lowest navigation.

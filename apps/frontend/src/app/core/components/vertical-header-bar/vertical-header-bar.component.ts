@@ -156,7 +156,7 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Methods called on 'edit menu style' button click.
+   * Methods called on 'Edit navigation bar style' button click.
    * 
    * Open sidenav with menu style properties and listen to changes.
    * It also stop the previous listener.
@@ -192,7 +192,7 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Method called on navigation 'marker' button click. 
+   * Method called on navigation 'Edit style' button click. 
    * 
    * Open sidenav with navigation style properties and listen to changes.
    * It also stop the previous listener.
@@ -231,7 +231,9 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Copy a navigation's style properties to the clipboard.
+   * Methods called on 'Copy style' button click.
+   * 
+   * Store navigation's style properties to service.
    *
    * @param event The click event.
    * @param navigation The navigation whose style should be copied.
@@ -262,7 +264,10 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Trigger an action on button click depending of the navigation type.
+   * Methods called on navigation click.
+   * 
+   * If we are in copy mode, apply style to navigation 
+   * otherwise trigger action up to navigation type.
    * 
    * @param navigation The navigation.
    */
@@ -292,7 +297,8 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Check if user is in this navigation or not (used in case button is in navigation bar).
+   * Check if user is in this navigation or not 
+   * (used in case button is in navigation bar).
    * 
    * @param navigationName The navigation name to check.
    * @returns true or false.

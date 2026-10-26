@@ -131,7 +131,7 @@ export class HeaderBarComponent implements OnInit {
   }
 
   /**
-   * Methods called on 'edit menu style' button click.
+   * Methods called on 'Edit navigation bar style' button click.
    * 
    * Open sidenav with menu style properties and listen to changes.
    * It also stop the previous listener.
@@ -164,7 +164,7 @@ export class HeaderBarComponent implements OnInit {
   }
 
   /**
-   * Method called on navigation 'marker' button click. 
+   * Method called on navigation 'Edit style' button click. 
    * 
    * Open sidenav with navigation style properties and listen to changes.
    * It also stop the previous listener.

@@ -20,6 +20,11 @@ export class StyleService {
     isCopyingStyle = false;
     styleToCopy: StylePayload | null = null;
 
+    /**
+     * Store navigation style properties and transform cursor to a brush cursor.
+     * 
+     * @param navigation 
+     */
     copyStyle(navigation: Navigation): void {
         setTimeout(() => {
             const { xPos, yPos, id: id_, refId: refId_, ...containerLayout } = navigation.containerLayout;
@@ -37,10 +42,24 @@ export class StyleService {
         }, 100);
     }
 
+    /**
+     * Update object style.
+     * 
+     * @param refId The object reference id (navigation or menu)
+     * @param stylePayload The style properties
+     * @returns 
+     */
     updateStyle(refId: string, stylePayload: StylePayload) {
         return this._http.patch(`${this.baseURL}menu/${refId}`, stylePayload);
     }
 
+    /**
+     * Update navigation style with style information stored in `styleToCopy`
+     * and transform brush cursor to default one.
+     * 
+     * @param event The mouse event.
+     * @param navigation 
+     */
     pasteStyle(event: MouseEvent, navigation: Navigation): void {
         if (this.isCopyingStyle && this.styleToCopy) {
             event.stopPropagation();

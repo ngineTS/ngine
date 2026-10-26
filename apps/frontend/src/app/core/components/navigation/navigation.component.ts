@@ -277,13 +277,20 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
   }
 
   /**
-   * Copy the navigation's style properties to the clipboard.
+   * Methods called on 'Copy style' button click.
+   * 
+   * Store navigation's style properties to service.
    */
   copyStyle(): void {
     this._styleService.copyStyle(this._navigation);
   }
 
 
+  /**
+   * Methods used to hide scroll bar based on navigaton type.
+   * 
+   * @returns True or False.
+   */
   doesNavigationHasScrollBar(): boolean {
     const navigationTypeWithoutScrollBar = [
       'external-link-button',
