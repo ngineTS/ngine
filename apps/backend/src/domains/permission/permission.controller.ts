@@ -1,6 +1,6 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { PermissionService } from './permission.service';
-import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
+import { NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
 @NavigationTypeNameArray(['role-management'])
@@ -9,7 +9,7 @@ export class PermissionController {
 
   constructor(private readonly _permissionService: PermissionService) {}
 
-  @Permission('view')
+  @Action('view')
   @UseGuards(RolesGuard)
   @Get()
   findAll() {

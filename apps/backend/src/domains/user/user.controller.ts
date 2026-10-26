@@ -4,7 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/core/auth/auth.guard';
 import { UserId } from 'src/core/decorators/user.decorator';
-import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
+import { NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
 @Controller('user')
@@ -17,7 +17,7 @@ export class UserController {
     return this.userService.findCurrentUser(userId);
   }
 
-  @Permission('view')
+  @Action('view')
   @UseGuards(RolesGuard)
   @Get()
   findAll() {
@@ -36,7 +36,7 @@ export class UserController {
     return this.userService.changeUserPassword(passwordChangeDto);
   }
 
-  @Permission('edit')
+  @Action('edit')
   @UseGuards(RolesGuard)
   @Patch(':id')
   update(
@@ -46,7 +46,7 @@ export class UserController {
     return this.userService.update(id, updateUserDto);
   }
 
-  @Permission('delete')
+  @Action('delete')
   @UseGuards(RolesGuard)
   @Delete(':id')
   remove(

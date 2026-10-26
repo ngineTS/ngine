@@ -2,7 +2,7 @@ import { Controller, Post, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs
 import { UserRoleService } from './user-role.service';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
-import { NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
+import { NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 import { UserRoleValidatorService } from './user-role-validator.service';
 
@@ -15,7 +15,7 @@ export class UserRoleController {
     private readonly _userRoleValidatorService: UserRoleValidatorService
   ) {}
 
-  @Permission('edit')
+  @Action('edit')
   @UseGuards(RolesGuard)
   @Post('bulk-save/:userId')
   async bulkSaveUserRoles(
