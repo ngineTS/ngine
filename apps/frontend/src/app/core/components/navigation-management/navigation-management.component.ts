@@ -283,7 +283,8 @@ export class NavigationManagementComponent implements OnInit {
 
   /**
    * Method called on Navigation Type selection change.
-   * If navigation type is a component then setup default size (/!\ Only in case of adding navigation)
+   * 
+   * Add url vallidator if navigation type selected is an external link.
    * 
    * @param event The MatSelectChange event.
    */

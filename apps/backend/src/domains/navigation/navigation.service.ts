@@ -409,8 +409,8 @@ export class NavigationService {
    * Save navigation with default style.
    * 
    * 1. Add draft and audit data and save navigation.
-   * 3. Assign style properties.
-   * 4. If navigation is a menu button then create menu.
+   * 2. Assign style properties.
+   * 3. If navigation is a menu button then create menu.
    * 
    * @param createNavigationDto The navigation to save.
    * @param parentNavigation The parent navigation.
