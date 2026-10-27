@@ -3,7 +3,7 @@ import { CalendarService } from './calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { UpdateCalendarDto } from './dto/update-calendar.dto';
 import { RolesGuard } from 'src/core/guards/role.guard';
-import { Feature, NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
+import { Feature, NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 
 @Feature('Calendar')
 @NavigationTypeNameArray(['calendar'])
@@ -12,21 +12,21 @@ export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Post()
-  @Permission('add')
+  @Action('add')
   @UseGuards(RolesGuard)
   create(@Body() createCalendarDto: CreateCalendarDto) {
     return this.calendarService.create(createCalendarDto);
   }
   
   @Get('navigation/:navigationId')
-  @Permission('view')
+  @Action('view')
   @UseGuards(RolesGuard)
   findCalendarEventsByNavigationId(@Param('navigationId', new ParseUUIDPipe()) navigationId: string) {
     return this.calendarService.findCalendarEventsByNavigationId(navigationId);
   }
 
   @Patch(':id')
-  @Permission('edit')
+  @Action('edit')
   @UseGuards(RolesGuard)
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -36,7 +36,7 @@ export class CalendarController {
   }
 
   @Delete(':id')
-  @Permission('delete')
+  @Action('delete')
   @UseGuards(RolesGuard)
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.calendarService.remove(id);

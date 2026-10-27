@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Feature, NavigationTypeNameArray, Permission } from '../decorators/role.decorator';
+import { Feature, NavigationTypeNameArray, Action } from '../decorators/role.decorator';
 import { DataSource } from 'typeorm';
 
 /**
@@ -9,7 +9,7 @@ import { DataSource } from 'typeorm';
  * 
  * This role requires the following parameters:
  * - The feature (ex: Calendar. It has to match entity name.)
- * - The permission (or action): view, edit or delete
+ * - The action: view, edit or delete
  * - The navigation or navigation id (if possible)
  * - The navigation type name
  * 
@@ -28,8 +28,8 @@ export class RolesGuard implements CanActivate {
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const permission = this._reflector.get(Permission, context.getHandler());
-    if (!permission) {
+    const action = this._reflector.get(Action, context.getHandler());
+    if (!action) {
       return true;
     }
     
@@ -40,12 +40,13 @@ export class RolesGuard implements CanActivate {
     const params = request.params;
     const user = request.user;
 
-    switch (permission) {
+    switch (action) {
 
       case "view":
+        const navigationGroupId = params.navigationGroupId ?? params.navigationId;
         /* if we look for a specific navigation id */
-        if (params.navigationId) {
-          if (user.userNavigationPermissions?.find(obj => obj.navigationGroupId === params.navigationId)) {
+        if (navigationGroupId) {
+          if (user.userNavigationPermissions?.find(obj => obj.navigationGroupId === navigationGroupId)) {
             return true;
           }
           else {

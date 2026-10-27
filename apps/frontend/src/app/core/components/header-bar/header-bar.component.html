@@ -97,6 +97,7 @@
                         (click)="_styleService.pasteStyle($event, child)"
                     >
                         <div
+                            [style.z-index]="child.containerLayout.xPos ? 'unset' : '1000'"
                             [style.padding-top.px]="child.containerLayout.paddingTop"
                             [style.padding-bottom.px]="child.containerLayout.paddingBottom"
                             [style.padding-right.px]="child.containerLayout.paddingRight"

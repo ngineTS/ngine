@@ -24,6 +24,7 @@ import { DefaultStyleFormComponent } from './core/components/default-style-form/
 import { CdkDrag } from '@angular/cdk/drag-drop';
 import { NavigationPublishDialogComponent } from './core/components/navigation-publish-dialog/navigation-publish-dialog.component';
 import { StyleService } from './core/services/style.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 
 
@@ -36,7 +37,8 @@ import { StyleService } from './core/services/style.service';
     MatMenuModule,
     GenericFormComponent,
     AsyncPipe,
-    CdkDrag
+    CdkDrag,
+    MatTooltipModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

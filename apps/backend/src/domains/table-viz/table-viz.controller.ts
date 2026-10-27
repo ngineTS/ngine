@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@
 import { TableVizService } from './table-viz.service';
 import { CreateTableVizDto } from './dto/create-table-viz.dto';
 import { UpdateTableVizDto } from './dto/update-table-viz.dto';
-import { Feature, NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
+import { Feature, NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
 import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
@@ -18,14 +18,14 @@ export class TableVizController {
     private readonly _customTableValidatorService: CustomTableValidatorService
   ) {}
 
-  @Permission('add')
+  @Action('add')
   @UseGuards(RolesGuard)
   @Post()
   create(@Body() createTableVizDto: CreateTableVizDto) {
     return this._tableVizService.create(createTableVizDto);
   }
 
-  @Permission('view')
+  @Action('view')
   @UseGuards(RolesGuard)
   @Get('navigation/:navigationId')
   findByNavigationId(@Param('navigationId') navigationId: string) {
@@ -50,7 +50,7 @@ export class TableVizController {
     return this._tableVizService.findTableContentByTableName(tableName);
   }
 
-  @Permission('edit')
+  @Action('edit')
   @UseGuards(RolesGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTableVizDto: UpdateTableVizDto) {
