@@ -26,6 +26,7 @@ export class ComponentService {
     "reusable-card-list": () => import('./reusable-card-list/reusable-card-list.component'),
     "authentication-management": () => import('./authentication-management/authentication-management.component'),
     "banner-management": () => import('./banner-management/banner-management.component'),
+    'ngine-guide': () => import('./ngine-guide/ngine-guide.component'),
 };
 
   /**
