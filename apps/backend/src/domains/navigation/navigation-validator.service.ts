@@ -283,7 +283,7 @@ export class NavigationValidatorService {
         obj.navigationGroupId === navigationGroupId && obj.permissionName.includes('edit')
       )
     ) {
-      throw new ForbiddenException();
+      throw new ForbiddenException(`You don't have permission to publish navigation with groupId ${navigationGroupId}`);
     }
   }
 

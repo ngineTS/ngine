@@ -11,7 +11,7 @@
         @if (!isDragging) {
             <div class="menu-toolbar" cdkDrag cdkDragLockAxis="x">
 
-                @if (navigation.permissionName?.includes('edit') && !isNavigationBarHidden) {
+                @if (navigation.permissionName?.includes('edit')) {
                     <!-- Grab toolbar icon -->
                     <div cdkDragHandle class="toolbar-grab">
                         <i class="bi bi-grip-vertical"></i>
@@ -44,27 +44,11 @@
                     }
                 }
 
-                <!-- Hide navigation bar button -->
-                @if (_headerBarService.activeVerticalBarsNumber) {
-                    @if (isNavigationBarHidden) {
-                        <i class="bi bi-chevron-down menu-button" 
-                            (click)="isNavigationBarHidden = false" 
-                            matTooltip="Show navigation bar"
-                        ></i>
-                    }
-                    @else {
-                        <i class="bi bi-chevron-up menu-button" 
-                            (click)="isNavigationBarHidden = true"
-                            matTooltip="Hide navigation bar"
-                        ></i>
-                    }
-                }
             </div>
         }
 
         <!-- Navigation bar -->
-        <div [style.display]="isNavigationBarHidden ? 'none' : ''"
-            [style.background-color]="navigation.menu.containerStyle.isBackgroundTransparent
+        <div [style.background-color]="navigation.menu.containerStyle.isBackgroundTransparent
                 ? 'transparent' : navigation.menu.containerStyle.backgroundColor"
             [style.height.px]="navigation.menu.containerLayout.height"
             [style.border]="navigation.menu.containerStyle.borderWidth + 'px ' +
@@ -113,6 +97,7 @@
                         (click)="_styleService.pasteStyle($event, child)"
                     >
                         <div
+                            [style.z-index]="child.containerLayout.xPos ? 'unset' : '1000'"
                             [style.padding-top.px]="child.containerLayout.paddingTop"
                             [style.padding-bottom.px]="child.containerLayout.paddingBottom"
                             [style.padding-right.px]="child.containerLayout.paddingRight"

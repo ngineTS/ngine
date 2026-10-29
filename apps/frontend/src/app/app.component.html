@@ -16,63 +16,61 @@
       }
     </mat-drawer>
 
-    <router-outlet />
+    <mat-drawer-content #drawerContent>
+      <router-outlet />
 
-    @if (_componentsContainerService.activeNavigation.permissionName?.includes('edit') ) {
-      <!-- Global draggable toolbar -->
-      <div cdkDrag class="d-none d-md-flex toolbar">
-        <!-- Grab toolbar icon -->
-        <div cdkDragHandle class="toolbar-grab">
-          <i class="bi bi-grip-vertical"></i>
-        </div>
+      @if (_componentsContainerService.activeNavigation.permissionName?.includes('edit') ) {
+        <!-- Global draggable toolbar -->
+        <div cdkDrag class="d-none d-md-flex toolbar">
+          <!-- Grab toolbar icon -->
+          <div cdkDragHandle class="toolbar-grab">
+            <i class="bi bi-grip-vertical"></i>
+          </div>
 
-        <!-- App global setting button -->
-        <button class="global-button" [matMenuTriggerFor]="menu">
-          <i class="bi bi-house-gear global-icon"></i>
-        </button>
-
-        <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="manageAppDefaultStyle()">
-            Manage application style
+          <!-- App global setting button -->
+          <button class="global-button" (click)="manageAppDefaultStyle()" matTooltip="Define app default style">
+            <i class="bi bi-palette global-icon"></i>
           </button>
 
-          <button mat-menu-item (click)="addNavigationType()">
-            New component type
+          <button class="global-button" (click)="addNavigationType()" matTooltip="New component type">
+            <i class="bi bi-plugin global-icon"></i>
           </button>
-        </mat-menu>
-        
 
-        <!-- Add navigation button -->
-        @if (_componentsContainerService.activeNavigation.level < 12) {
-          <button class="global-button" [matMenuTriggerFor]="menu">
-            <i class="bi bi-plus global-icon"></i>
-          </button>
-          
-          <mat-menu #menu="matMenu">
-            @if (_componentsContainerService.activeNavigation.children?.length === 0) {
-              <button mat-menu-item (click)="openFormToAddNavigationBarOrNavigation('horizontal')">
-                Add horizontal navigation bar
-              </button>
-              <button mat-menu-item (click)="openFormToAddNavigationBarOrNavigation('vertical')">
-                Add vertical navigation bar
-              </button>
-            }
-            <button mat-menu-item (click)="openFormToAddNavigationBarOrNavigation('navigation')">
-              Add component
+          <!-- Add navigation button -->
+          @if (_componentsContainerService.activeNavigation.level < 12) {
+            <button class="global-button" [matMenuTriggerFor]="menu" matTooltip="Add component">
+              <i class="bi bi-plus global-icon"></i>
             </button>
-          </mat-menu>
-        }
+            
+            <mat-menu #menu="matMenu">
+              @if (_componentsContainerService.activeNavigation.children?.length === 0) {
+                <button mat-menu-item (click)="openFormToAddNavigationBarOrNavigation('horizontal')">
+                  Add horizontal navigation bar
+                </button>
+                <button mat-menu-item (click)="openFormToAddNavigationBarOrNavigation('vertical')">
+                  Add vertical navigation bar
+                </button>
+              }
+              <button mat-menu-item (click)="openFormToAddNavigationBarOrNavigation('navigation')">
+                Add component
+              </button>
+            </mat-menu>
+          }
 
-        <button class="global-button" (click)="openPublishDialog()">
-          <span class="upload-button-wrapper">
-            <i class="bi bi-upload global-icon"></i>
-            @if (navigationChangesCount > 0) {
-              <span class="notification-badge">{{ navigationChangesCount }}</span>
-            }
-          </span>
-        </button>
-      </div>
-    }
+          <button class="global-button" (click)="openPublishDialog()" matTooltip="Publish changes">
+            <span class="upload-button-wrapper">
+              <i class="bi bi-upload global-icon"></i>
+              @if (navigationChangesCount > 0) {
+                <span class="notification-badge">{{ navigationChangesCount }}</span>
+              }
+            </span>
+          </button>
+        </div>
+      }
+    </mat-drawer-content>
 
   </mat-drawer-container>
+}
+@else {
+  <router-outlet />
 }

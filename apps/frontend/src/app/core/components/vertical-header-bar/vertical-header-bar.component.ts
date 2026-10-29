@@ -14,7 +14,6 @@ import { StylePayload } from '../../models/menu.interface';
 import { MatDialog } from '@angular/material/dialog';
 import { EmptyDialogComponent } from '../empty-dialog/empty-dialog.component';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { HeaderBarService } from '../../services/header-bar.service';
 import { StyleService } from '../../services/style.service';
 import { BannerComponent } from '../banner/banner.component';
 
@@ -45,7 +44,6 @@ export class VerticalHeaderBarComponent implements OnInit {
     private _typographyStyleService: TypographyStyleService,
     private _sideNavService: SideNavService,
     private _matDialog: MatDialog,
-    private _headerBarService: HeaderBarService,
     private _styleService: StyleService,
   ) { }
 
@@ -75,14 +73,6 @@ export class VerticalHeaderBarComponent implements OnInit {
     this.navigation = this._route.snapshot.data["navigation"];
     this.windowWidth = window.innerWidth;
     this._navigationService.sortNavigationsByOrder(this.navigation);
-    this._headerBarService.activeVerticalBarsNumber++;
-  }
-
-  /**
-   * Lifecycle hook called after the component has been destroyed.
-   */
-  ngOnDestroy() {
-    this._headerBarService.activeVerticalBarsNumber--;
   }
 
   /**
@@ -166,7 +156,7 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Methods called on 'edit menu style' button click.
+   * Methods called on 'Edit navigation bar style' button click.
    * 
    * Open sidenav with menu style properties and listen to changes.
    * It also stop the previous listener.
@@ -177,7 +167,10 @@ export class VerticalHeaderBarComponent implements OnInit {
     const menuStyleFormConfig: DeepFormConfig<Partial<StylePayload>> = {
       containerLayout: this._containerLayoutService.setUpContainerLayoutForm(
         this.navigation.menu.containerLayout,
-        ['marginTop', 'marginRight', 'marginBottom', 'marginLeft']
+        [
+          'marginTop', 'marginBottom', 'width', 'paddingTop',
+          'paddingBottom', 'paddingLeft', 'paddingRight'
+        ]
       ),
       containerStyle: this._containerStyleService.setUpContainerStyleForm(
         this.navigation.menu.containerStyle,
@@ -199,7 +192,7 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Method called on navigation 'marker' button click. 
+   * Method called on navigation 'Edit style' button click. 
    * 
    * Open sidenav with navigation style properties and listen to changes.
    * It also stop the previous listener.
@@ -238,7 +231,9 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Copy a navigation's style properties to the clipboard.
+   * Methods called on 'Copy style' button click.
+   * 
+   * Store navigation's style properties to service.
    *
    * @param event The click event.
    * @param navigation The navigation whose style should be copied.
@@ -269,7 +264,10 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Trigger an action on button click depending of the navigation type.
+   * Methods called on navigation click.
+   * 
+   * If we are in copy mode, apply style to navigation 
+   * otherwise trigger action up to navigation type.
    * 
    * @param navigation The navigation.
    */
@@ -299,7 +297,8 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Check if user is in this navigation or not (used in case button is in navigation bar).
+   * Check if user is in this navigation or not 
+   * (used in case button is in navigation bar).
    * 
    * @param navigationName The navigation name to check.
    * @returns true or false.

@@ -48,14 +48,14 @@ export class BannerManagementComponent extends NavigationBaseComponent {
     this.bannerFormConfig = {
       startDate: {
         value: new Date(),
-        alias: 'Start Date (UTC)',
+        alias: 'Start Date',
         order: 2,
         validators: [Validators.required],
         type: 'date-and-time'
       },
       endDate: {
         value: new Date(),
-        alias: 'End Date (UTC)',
+        alias: 'End Date',
         order: 3,
         validators: [Validators.required],
         type: 'date-and-time'
@@ -107,6 +107,10 @@ export class BannerManagementComponent extends NavigationBaseComponent {
    * Reset the form values to default and open a dialog to add a new banner.
    */
   async addBanner() {
+    if (!this._canEdit) {
+      return;
+    }
+
     this.bannerFormConfig.description.value = '';
     this.bannerFormConfig.navigationId.value = '';
     this.bannerFormConfig.startDate.value = new Date();
@@ -128,7 +132,7 @@ export class BannerManagementComponent extends NavigationBaseComponent {
       if (result === 'added') {
         this._bannerService.getAllBanners().subscribe(resp => this.banners = resp);
       }
-    })
+    });
   }
 
   /**
@@ -137,6 +141,10 @@ export class BannerManagementComponent extends NavigationBaseComponent {
    * @param banner The banner to edit.
    */
   editBanner(banner: Banner) {
+    if (!this._canEdit) {
+      return;
+    }
+
     this.bannerFormConfig.description.value = banner.description;
     this.bannerFormConfig.navigationId.value = banner.navigationId;
     (this.bannerFormConfig.navigationId as DropdownInputConfig<string, Navigation>)
@@ -152,7 +160,7 @@ export class BannerManagementComponent extends NavigationBaseComponent {
       formConfig: this.bannerFormConfig,
       payloadId: banner.id,
       controllerName: 'banner',
-      hasDeleteButton: true,
+      hasDeleteButton: this._canDelete,
     }
 
     const matDialogRef = this._matDialog.open(FormContainerComponent, { data: dialogData });

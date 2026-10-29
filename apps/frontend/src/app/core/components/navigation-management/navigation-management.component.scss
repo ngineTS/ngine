@@ -117,3 +117,14 @@ h4 {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.navigation-type-info-icon {
+    margin-left: 6px;
+    cursor: pointer;
+    font-size: 16px;
+
+    &:hover {
+        color: #9a5cb7;
+
+    }
+}

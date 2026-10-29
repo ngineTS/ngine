@@ -3,7 +3,7 @@ import { QuillEditorService } from './quill-editor.service';
 import { CreateQuillEditorDto } from './dto/create-quill-editor.dto';
 import { UpdateQuillEditorDto } from './dto/update-quill-editor.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
-import { Feature, NavigationTypeNameArray, Permission } from 'src/core/decorators/role.decorator';
+import { Feature, NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
 
 @Feature('QuillEditor')
@@ -13,21 +13,21 @@ export class QuillEditorController {
   constructor(private readonly quillEditorService: QuillEditorService) {}
 
   @Post()
-  @Permission('add')
+  @Action('add')
   @UseGuards(RolesGuard)
   create(@Body() createQuillEditorDto: CreateQuillEditorDto) {
     return this.quillEditorService.create(createQuillEditorDto);
   }
 
   @Get('navigation/:navigationId')
-  @Permission('view')
+  @Action('view')
   @UseGuards(RolesGuard)
   findbyNavigationId(@Param('navigationId', new ParseUUIDPipe()) navigationId: string) {
     return this.quillEditorService.findByNavigationId(navigationId);
   }
 
   @Patch(':id')
-  @Permission('edit')
+  @Action('edit')
   @UseGuards(RolesGuard)
   update(
     @Param('id', new ParseUUIDPipe()) id: string,

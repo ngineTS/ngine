@@ -4,7 +4,12 @@
 
         <!-- Navigation Type Cards Scroll -->
         <div class="nav-type-section">
-            <span class="navigation-type-label">Component Type*</span>
+            <div class="navigation-type-label d-flex align-items-center mb-2">
+                <span>Component Type*</span>
+                <i class="bi bi-info-circle navigation-type-info-icon" (click)="openFeaturesDocumentation()">
+                    
+                </i>
+            </div>
             @if (isLoadingNavigationTypes) {
                 <mat-spinner diameter="20"></mat-spinner>
             } @else {
