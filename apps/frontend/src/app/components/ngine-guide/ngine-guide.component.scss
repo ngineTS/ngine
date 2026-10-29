@@ -438,45 +438,9 @@
 	margin-bottom: 0;
 }
 
-.guide-step__image {
-	background: #faf9fd;
-	border: 1px solid #eeedf4;
-	border-radius: 8px;
-	display: inline-block;
-	margin: 18px 0 0;
-	max-width: 100%;
-	padding: 7px;
-}
-
-.guide-step__image img {
-	border-radius: 4px;
-	display: block;
-	height: auto;
-	max-height: 380px;
-	max-width: 100%;
-	object-fit: contain;
-	width: auto;
-}
-
 .guide-card strong {
 	color: #4a465d;
 	font-weight: 700;
-}
-
-.guide-chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 7px;
-	margin-top: 17px;
-}
-
-.guide-chips span {
-	background: #f6f4fb;
-	border: 1px solid #ece9f4;
-	border-radius: 5px;
-	color: #726d85;
-	font-size: 0.72rem;
-	padding: 6px 9px;
 }
 
 .guide-options {
