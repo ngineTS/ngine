@@ -137,5 +137,11 @@
     "@schematics/angular:resolver": {
       "typeSeparator": "."
     }
+  },
+  "cli": {
+    "schematicCollections": [
+      "@schematics/angular",
+      "ngine-component"
+    ]
   }
 }

@@ -1,0 +1,143 @@
+<main class="ngine-guide" aria-labelledby="guide-title">
+	<section class="guide-hero">
+		<div class="guide-hero__glow guide-hero__glow--one" aria-hidden="true"></div>
+		<div class="guide-hero__glow guide-hero__glow--two" aria-hidden="true"></div>
+
+		<div class="guide-hero__content">
+			<p class="guide-eyebrow"><span class="guide-eyebrow__dot"></span> YOUR APP, YOUR WAY</p>
+			<h1 id="guide-title">Meet your new<br /><span>App Builder.</span></h1>
+			<p class="guide-hero__intro">
+				Welcome to Ngine — the CMS that lets you focus on your business, not the busywork.
+				Build pages, plug in your features, and bring your application to life.
+			</p>
+		</div>
+	</section>
+
+	<section class="guide-intro" id="getting-started" aria-labelledby="getting-started-title">
+		<div class="guide-intro__number">01—07</div>
+		<div>
+			<p class="guide-kicker">A QUICK TOUR</p>
+			<h2 id="getting-started-title">From blank page to brilliant app.</h2>
+			<p>
+				The idea is simple: design your page, add features from your library, and publish when
+				you’re ready. Here’s how to make the most of Ngine.
+			</p>
+		</div>
+	</section>
+
+	<ol class="guide-steps">
+		<li class="guide-step">
+			<div class="guide-step__marker"><span>01</span></div>
+			<article class="guide-card">
+				<h3>Set your app’s default style</h3>
+				<p>
+					Start with the look and feel you want across your page. Set defaults for container
+					layout, container styling, and typography. New components will pick up these styles
+					automatically.
+				</p>
+				<img class="mt-3" height="60" style="width:auto;" src="/assets/images/default-style-option.png" alt="The default style control in the Ngine page editor" loading="lazy" />
+			</article>
+		</li>
+
+		<li class="guide-step">
+			<div class="guide-step__marker"><span>02</span></div>
+			<article class="guide-card">
+				<h3>Add components to the page</h3>
+				<p>
+					Choose <strong>Add component</strong> to open the component picker and select a feature
+					from your library. You can also add common navigation elements directly:
+				</p>
+				<div class="guide-options">
+					<div><span aria-hidden="true">↔</span><strong>Horizontal navigation</strong><small>A classic top navigation bar</small></div>
+					<div><span aria-hidden="true">☷</span><strong>Vertical navigation</strong><small>A handy navigation tree</small></div>
+				</div>
+                <div class="row">
+				<img class="mt-3" height="150" style="width: auto;" src="/assets/images/add-component-option.png" alt="The add component menu with horizontal navigation, vertical navigation, and component options" loading="lazy" />
+                <a class="guide-text-link mt-3" href="https://ngine.dev/documentation/feature-library" target="_blank" rel="noopener noreferrer">
+					Explore the feature library <span aria-hidden="true">↗</span>
+				</a>
+                </div>
+			</article>
+		</li>
+
+		<li class="guide-step">
+			<div class="guide-step__marker"><span>03</span></div>
+			<article class="guide-card">
+				<h3>Style each component your way</h3>
+				<p>
+					Every component inherits the default style from step 1. Want something different?
+					Use the style buttons in the top-right corner to customize a component independently.
+				</p>
+				<img class="mt-3" height="250" style="width: auto;" src="/assets/images/modify-style-option.png" alt="The component style editor with layout controls" loading="lazy" />
+			</article>
+		</li>
+
+		<li class="guide-step">
+			<div class="guide-step__marker"><span>04</span></div>
+			<article class="guide-card">
+				<h3>Publish your changes</h3>
+				<p>
+					When everything looks good, open the publish interface to publish your changes.
+					Not quite there yet? Cancel to leave your current version as it is.
+				</p>
+				<img class="mt-3" height="60" style="width: auto;" src="/assets/images/publish-option.png" alt="The publish button in the Ngine page editor" loading="lazy" />
+			</article>
+		</li>
+
+		<li class="guide-step">
+			<div class="guide-step__marker"><span>05</span></div>
+			<article class="guide-card">
+				<h3>Develop and register a new component</h3>
+				<p>
+					When your next business feature isn’t in the library yet, develop it in your
+					codebase. Add the Ngine schematic, then generate a Ngine component:
+				</p>
+				<div class="guide-code">
+					<div><span>01</span><code>ng add ngine-component</code></div>
+					<div><span>02</span><code>ng generate base-component &lt;name&gt;</code></div>
+				</div>
+				<p>
+					Build your feature with Angular on the frontend and NestJS on the backend. The Ngine components contains properties
+                    like canAdd, canEdit and canDelete to implement permission control directly in the code without having to code it yourself.
+				</p>
+				<p class="mt-2">
+					Once it's ready, click on <strong>New component type</strong> in the global toobar and add its
+					<code class="guide-inline-code">&lt;name&gt;</code> reference to the library.
+				</p>
+				<div class="guide-note"><span aria-hidden="true">↻</span> Your feature is now part of the library and can be resued everywhere!</div>
+				<img class="mt-3" height="60" style="width: auto;" src="/assets/images/new-component-type-option.png" alt="The New component Type control in the Ngine page editor" loading="lazy" />
+			</article>
+		</li>
+
+		<li class="guide-step">
+			<div class="guide-step__marker"><span>06</span></div>
+			<article class="guide-card">
+				<h3>Admin interface</h3>
+				<p>
+					The admin interface comes with useful tools to help you run your application.
+                    You can customize it like the rest of the app and add as many features as you want!
+				</p>
+				<div class="guide-admin-grid">
+					<div><i class="bi bi-person-gear" aria-hidden="true"></i><strong>User roles</strong><small>Create roles and manage access to app sections and components.</small></div>
+					<div><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><strong>Analytics</strong><small>Keep an eye on your application's key KPIs.</small></div>
+					<div><i class="bi bi-folder2-open" aria-hidden="true"></i><strong>File management</strong><small>Manage the files uploaded to your application.</small></div>
+					<div><i class="bi bi-megaphone" aria-hidden="true"></i><strong>Banner management</strong><small>Create and schedule important messages for your users.</small></div>
+				</div>
+			</article>
+		</li>
+
+		<li class="guide-step guide-step--last">
+			<div class="guide-step__marker guide-step__marker--done"><span aria-label="Complete">✓</span></div>
+			<article class="guide-finish mb-4">
+				<p class="guide-kicker">THAT’S THE NGINE WAY</p>
+				<h3>You’re ready to build something great.</h3>
+				<p>Your first Ngine app is just the beginning. Pick an idea, make it yours, and see where you take it.</p>
+				<a href="https://ngine.dev/documentation/video-tutorials" target="_blank" rel="noopener noreferrer">
+					<span class="guide-finish__play" aria-hidden="true">▶</span>
+					Watch the video tutorials
+					<span aria-hidden="true">↗</span>
+				</a>
+			</article>
+		</li>
+	</ol>
+</main>
