@@ -278,8 +278,7 @@ VALUES ('dialog-button', 'Dialog Button', 'Open a dialog on click.', 'dialog-but
 	('reusable-card-list', 'Reusable card list', 'A simple item management feature that allows users to add, edit, delete, and reorder items.', 'card-list.png'),
     ('authentication-management', 'Custom Authentication Popup', 'Custom your autentication popup by conneting your app to Stripe and propose paid packs to your users.', 'custom-auth-popup.png'),
     ('banner-management', 'Banner Management', 'Show important information to your users in the different sections of the application.', 'banner.png'),
-	('ngine-guide', 'Ngine Guide', 'The startup guide of Ngine.', 'ngine-guide.png'),
-;
+	('ngine-guide', 'Ngine Guide', 'The startup guide of Ngine.', 'ngine-guide.png');
 
 -- Insert permissions --
 INSERT INTO "ngine"."permission" ("name", "priority")
