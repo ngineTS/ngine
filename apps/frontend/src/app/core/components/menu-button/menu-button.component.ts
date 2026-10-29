@@ -75,8 +75,7 @@ export class MenuButtonComponent {
    * @param event The click event.
    * @param navigation The navigation to edit.
    */
-  editNavigation(event: MouseEvent, navigation: Navigation) {
-    event.stopPropagation();
+  editNavigation(navigation: Navigation) {
     this._navigationService.manageNavigation(navigation.parentGroupId, navigation);
   }
 
@@ -106,8 +105,7 @@ export class MenuButtonComponent {
    * 
    * @param navigation The navigation to edit.
    */
-  editNavigationStyle(event: MouseEvent, navigation: Navigation) {
-    event.stopPropagation();
+  editNavigationStyle(navigation: Navigation) {
     this._sideNavService.resetSideNavContent();
     
     const navigationStylePayload: DeepFormConfig<Partial<StylePayload>> = {

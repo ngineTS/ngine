@@ -5,6 +5,8 @@
   
   <!-- Left sidebar with navigation tree -->
   <div class="navigation-sidebar-box"
+    [style.padding-right.px]="navigation.menu.containerLayout.marginRight"
+    [style.padding-left.px]="navigation.menu.containerLayout.marginLeft"
     [style.padding-top.px]="navigation.menu.containerLayout.marginTop"
     [style.padding-bottom.px]="navigation.menu.containerLayout.marginBottom"
   >
@@ -50,7 +52,7 @@
           </i>
         
           <i class="bi bi-plus edit-icon" 
-            (click)="manageNavigation($event)"
+            (click)="manageNavigation()"
             [matTooltip]="'Add navigation'">
           </i>
 
@@ -146,6 +148,7 @@
         (click)="actionClick($event, node, parentPath)"
         (mouseenter)="node['isMouseOver'] = true"
         (mouseleave)="node['isMouseOver'] = false"
+        matTooltip="{{ node.description }}"
       >  
         @if (node.icon) {
           <i [class]="'bi bi-' + node.icon"></i>
@@ -165,15 +168,15 @@
               </i>
 
               <mat-menu #navigationOptionsMenu="matMenu">
-                <button mat-menu-item (click)="copyStyle($event, node)">
+                <button mat-menu-item (click)="copyStyle(node)">
                   <i class="bi bi-brush me-2"></i>
                   Copy style
                 </button>
-                <button mat-menu-item (click)="editNavigationStyle($event, node)">
+                <button mat-menu-item (click)="editNavigationStyle(node)">
                   <i class="bi bi-marker-tip me-2"></i>
                   Edit style
                 </button>
-                <button mat-menu-item (click)="manageNavigation($event, node)">
+                <button mat-menu-item (click)="manageNavigation(node)">
                   <i class="bi bi-gear me-2"></i>
                   Settings
                 </button>
