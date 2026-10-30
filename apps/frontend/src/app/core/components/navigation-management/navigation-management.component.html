@@ -6,15 +6,20 @@
         <div class="nav-type-section">
             <div class="navigation-type-label d-flex align-items-center mb-2">
                 <span>Component Type*</span>
-                <i class="bi bi-info-circle navigation-type-info-icon" (click)="openFeaturesDocumentation()">
-                    
-                </i>
+                <i class="bi bi-info-circle navigation-type-info-icon" (click)="openFeaturesDocumentation()"></i>
             </div>
             @if (isLoadingNavigationTypes) {
                 <mat-spinner diameter="20"></mat-spinner>
             } @else {
+                <input matInput 
+                    class="nav-type-search"
+                    [disabled]="data.navigation?.id" 
+                    (keyup)="applyFilterOnNavigationType($event)" 
+                    placeholder="Search..." 
+                    #input
+                >
                 <div class="nav-type-scroll">
-                    @for (navType of navigationTypes; track navType.id) {
+                    @for (navType of filteredNavigationTypes; track navType.id) {
                         <div
                             class="nav-type-card"
                             [class.nav-type-disabled]="data.navigation?.id"

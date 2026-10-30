@@ -58,6 +58,7 @@ export class NavigationManagementComponent implements OnInit {
 
   navigationForm!: FormGroup;
   navigationTypes: NavigationType[] = [];
+  filteredNavigationTypes: NavigationType[] = [];
   flatNavigations: Navigation[] = [];
   navigationTypeSelected: NavigationType | undefined;
   filteredIcons: Array<string> = [];
@@ -104,6 +105,7 @@ export class NavigationManagementComponent implements OnInit {
           this.navigationTypeImageUrlMap[navType.thumbnailImage] = this._mediaService.getFileUrl(navType.thumbnailImage);
         }
       });
+      this.filteredNavigationTypes = this.navigationTypes;
     });
     
     /* 5. */
@@ -305,6 +307,7 @@ export class NavigationManagementComponent implements OnInit {
   selectNavigationType(navType: NavigationType) {
     if (!this.data.navigation?.id ) {
       this.navigationForm.get('navigationTypeId')?.setValue(navType.id);
+      this.navigationForm.get('displayLabel')?.setValue(navType.displayLabel);
       this.onNavigationTypeChange({ value: navType.id } as MatSelectChange);
     }
   }
@@ -340,5 +343,22 @@ export class NavigationManagementComponent implements OnInit {
 
   openFeaturesDocumentation() {
     window.open('https://ngine.dev/documentation/feature-library', '_blank', 'noopener,noreferrer');
+  }
+
+  /**
+   * Apply filter on navigation type name on search input keyup.
+   * 
+   * @param event The keyup event.
+   */
+  applyFilterOnNavigationType(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value.trim().toLocaleLowerCase();
+    if (filterValue === '') {
+      this.filteredNavigationTypes = this.navigationTypes;
+    }
+    else {
+      this.filteredNavigationTypes = this.navigationTypes.filter(obj => 
+        obj.displayLabel.trim().toLocaleLowerCase().includes(filterValue)
+      );
+    }
   }
 }
