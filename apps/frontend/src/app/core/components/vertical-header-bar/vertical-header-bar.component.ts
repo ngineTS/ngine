@@ -132,8 +132,7 @@ export class VerticalHeaderBarComponent implements OnInit {
    * 
    * @param navigation The navigation to edit (optional).
    */
-  manageNavigation(event: MouseEvent, navigation?: Navigation): void {
-    event.stopPropagation();
+  manageNavigation(navigation?: Navigation): void {
     this._navigationService.manageNavigation(this.navigation.groupId, navigation);
   }
 
@@ -168,7 +167,7 @@ export class VerticalHeaderBarComponent implements OnInit {
       containerLayout: this._containerLayoutService.setUpContainerLayoutForm(
         this.navigation.menu.containerLayout,
         [
-          'marginTop', 'marginBottom', 'width', 'paddingTop',
+          'marginTop', 'marginBottom', 'marginLeft', 'marginRight', 'width', 'paddingTop',
           'paddingBottom', 'paddingLeft', 'paddingRight'
         ]
       ),
@@ -199,8 +198,7 @@ export class VerticalHeaderBarComponent implements OnInit {
    * 
    * @param navigation The navigation to edit.
    */
-  editNavigationStyle(event: MouseEvent, navigation: Navigation) {
-    event.stopPropagation();
+  editNavigationStyle(navigation: Navigation) {
     this._sideNavService.resetSideNavContent();
 
     const navigationStylePayload: DeepFormConfig<Partial<StylePayload>> = {
@@ -238,8 +236,7 @@ export class VerticalHeaderBarComponent implements OnInit {
    * @param event The click event.
    * @param navigation The navigation whose style should be copied.
    */
-  copyStyle(event: MouseEvent, navigation: Navigation): void {
-    event.stopPropagation();
+  copyStyle(navigation: Navigation): void {
     this._styleService.copyStyle(navigation);
   }
 

@@ -27,7 +27,6 @@ import { StyleService } from './core/services/style.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 
-
 @Component({
   selector: 'app-root',
   imports: [

@@ -74,11 +74,11 @@
                         ></i>
 
                         <mat-menu #navigationOptionsMenu="matMenu">
-                            <button mat-menu-item (click)="editNavigationStyle($event, child)">
+                            <button mat-menu-item (click)="editNavigationStyle(child)">
                                 <i class="bi bi-marker-tip me-2"></i>
                                 Edit style
                             </button>
-                            <button mat-menu-item (click)="editNavigation($event, child)">
+                            <button mat-menu-item (click)="editNavigation(child)">
                                 <i class="bi bi-gear me-2"></i>
                                 Settings
                             </button>
@@ -159,11 +159,11 @@
                     ></i>
 
                     <mat-menu #navigationOptionsMenu="matMenu">
-                        <button mat-menu-item (click)="editNavigationStyle($event, navigation)">
+                        <button mat-menu-item (click)="editNavigationStyle(navigation)">
                             <i class="bi bi-marker-tip me-2"></i>
                             Edit style
                         </button>
-                        <button mat-menu-item (click)="editNavigation($event, navigation)">
+                        <button mat-menu-item (click)="editNavigation(navigation)">
                             <i class="bi bi-gear me-2"></i>
                             Settings
                         </button>
@@ -235,11 +235,11 @@
                                 ></i>
 
                                 <mat-menu #navigationOptionsMenu="matMenu">
-                                    <button mat-menu-item (click)="editNavigationStyle($event, child)">
+                                    <button mat-menu-item (click)="editNavigationStyle(child)">
                                         <i class="bi bi-marker-tip me-2"></i>
                                         Edit style
                                     </button>
-                                    <button mat-menu-item (click)="editNavigation($event, child)">
+                                    <button mat-menu-item (click)="editNavigation(child)">
                                         <i class="bi bi-gear me-2"></i>
                                         Settings
                                     </button>
