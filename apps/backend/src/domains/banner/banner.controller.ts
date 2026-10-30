@@ -26,8 +26,6 @@ export class BannerController {
   }
 
   @Get('navigation/:navigationGroupId')
-  @Action('view')
-  @UseGuards(RolesGuard)
   findOneByNavigationId(@Param('navigationGroupId') navigationGroupId: string) {
     return this.bannerService.findOneByNavigationId(navigationGroupId);
   }
