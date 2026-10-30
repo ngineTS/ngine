@@ -112,7 +112,6 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    */
   ngAfterViewInit(): void {
     this.loadComponent();
-    this.createSizeObserver();
     setTimeout(() => {
       this.createSizeObserver();
     }, 500);
@@ -165,8 +164,12 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * and exclude resizing due to screen size change.
    */
   createSizeObserver() {
+    let isInitialNotification = true;
     this.observer = new ResizeObserver(() => {
-      if (this.isMouseOver) {
+      if (isInitialNotification) {
+        isInitialNotification = false;
+      }
+      else if (this.isMouseOver) {
         this.isResizing = true;
       }
 
