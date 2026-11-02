@@ -1,0 +1,61 @@
+<h2 class="mb-4 fw-bold">Local Installation</h2>
+<p class="local-guide__intro">
+  Run Ngine directly on your machine for local development.
+</p>
+
+<section class="local-guide__prerequisite" aria-label="Prerequisites">
+  <i class="bi bi-info-circle" aria-hidden="true"></i>
+  <div>
+    <strong>Prerequisites:</strong>
+    <ul>
+      <li>Node.js version 20 or later</li>
+      <li>PostgreSQL, or another supported database, installed and running</li>
+    </ul>
+  </div>
+</section>
+
+<ol class="local-guide__steps my-4">
+  <li class="local-guide__step">
+    <span class="local-guide__step-number" aria-hidden="true">1</span>
+    <div class="local-guide__step-content">
+      <h6>Clone the repository</h6>
+      <p>Clone the Ngine repository, then open a terminal in its root folder:</p>
+      <pre><code>git clone https://github.com/ngineTS/ngine.git</code></pre>
+    </div>
+  </li>
+
+  <li class="local-guide__step">
+    <span class="local-guide__step-number" aria-hidden="true">2</span>
+    <div class="local-guide__step-content">
+      <h6>Configure your environment</h6>
+      <p>In the repository root, copy <code>.env.example</code> and name the copy <code>.env</code>.</p>
+      <p>Open <code>.env</code> and replace the example values with your database details and other required configuration.</p>
+    </div>
+  </li>
+
+  <li class="local-guide__step">
+    <span class="local-guide__step-number" aria-hidden="true">3</span>
+    <div class="local-guide__step-content">
+      <h6>Install dependencies</h6>
+      <p>From the repository root, install the dependencies for both apps:</p>
+      <pre><code>npm install</code></pre>
+    </div>
+  </li>
+
+  <li class="local-guide__step">
+    <span class="local-guide__step-number" aria-hidden="true">4</span>
+    <div class="local-guide__step-content">
+      <h6>Start the application</h6>
+      <p>Start the backend and frontend from the repository root:</p>
+      <pre><code>npm start</code></pre>
+    </div>
+  </li>
+
+  <li class="local-guide__step">
+    <span class="local-guide__step-number" aria-hidden="true">5</span>
+    <div class="local-guide__step-content">
+      <h6>Wait for the app to load</h6>
+      <p>When the servers have started, open the frontend at <a href="http://localhost:4200">http://localhost:4200</a>.</p>
+    </div>
+  </li>
+</ol>
