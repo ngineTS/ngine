@@ -55,7 +55,7 @@
         class="navigation-div"
         [style.overflow-y]="hasScrollBar ? 'auto' : 'hidden'"
         [style.width]="windowWidth > windowWidthLimit
-            ? (_navigation.containerLayout.width ?? 25) * windowWidth / 100 + 'px' 
+            ? (_navigation.containerLayout.width ?? 25) * _componentsContainerService.currentWidthPx! / 100 + 'px' 
             : '100%'"
         [style.height]="windowWidth > windowWidthLimit 
             ?   _navigation.containerLayout.heightFitContent

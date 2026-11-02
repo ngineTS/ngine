@@ -70,7 +70,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
     private _typographyStyleService: TypographyStyleService,
     private _sideNavService: SideNavService,
     private _mediaService: MediaService,
-    private _componentsContainerService: ComponentsContainerService,
+    public _componentsContainerService: ComponentsContainerService,
     public _styleService: StyleService
   ) { 
     super(); 
@@ -317,7 +317,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Resize navigation to match the screen size.
    */
   onFullScreenClick() {
-    const width = this._componentsContainerService.currentWidthPx! / this.windowWidth * 97.5;
+    const width = 97.5;
     const height = 99;
     const xPos = 1;
     this._navigation.containerLayout.width = width;
@@ -335,6 +335,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
         if (this.containerRef) {
           this._sizeChanged = !this._sizeChanged;
           this.containerRef.setInput('_sizeChanged', this._sizeChanged);
+          this.isResizing = false;
         }
       });
   }
