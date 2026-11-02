@@ -150,6 +150,7 @@ export class NavigationManagementComponent implements OnInit {
           .subscribe(() => {
             this._snackbarService.showSuccessSnackBar('Component deleted successfully.');
             this.refreshRoutingAndRedirect(this.navigationForm.get('parentGroupId')?.value);
+            this._navigationService.navigationsWithChangesList.delete(this.data.navigation!.id);
           });
       }
     }

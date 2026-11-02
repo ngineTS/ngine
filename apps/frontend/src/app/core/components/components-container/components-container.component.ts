@@ -33,7 +33,7 @@ export class ComponentsContainer implements OnInit {
   constructor(
     private _route: ActivatedRoute,
     private _containerLayoutService: ContainerLayoutService,
-    public _componentsContainerService: ComponentsContainerService,
+    private _componentsContainerService: ComponentsContainerService,
   ) { }
 
   /** The components container. */
