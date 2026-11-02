@@ -1,0 +1,57 @@
+.page {
+    font-family: 'Open Sans', sans-serif;
+}
+
+.font-bold {
+    font-family: 'Open Sans Bold', sans-serif;
+}
+
+.title {
+    font-size: 36px;
+    line-height: 1.2;
+}
+
+.ngine {
+    color: #985ab5;
+}
+
+.frame-description {
+    margin-left: 1px;
+    margin-top: 32px;
+    font-size: 18px;
+    max-width: 600px !important;
+}
+
+
+@media (max-width: 750px) { 
+   .frame-description {
+        text-align: center;
+        font-size: 22px;
+    } 
+
+    .title {
+        font-size: 42px;
+        text-align: center;
+    }
+
+}
+
+.git-button {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background-color: transparent;
+    border: #E8E8E8 2px solid;
+    border-radius: 16px;
+    color: #E8E8E8;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+              0 8px 10px 1px rgba(0, 0, 0, 0.14),
+              0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.git-button:hover {
+    color: #985ab5;
+    border-color: #985ab5;
+}

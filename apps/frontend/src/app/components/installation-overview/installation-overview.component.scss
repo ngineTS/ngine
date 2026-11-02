@@ -1,0 +1,36 @@
+.installation-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border: 1px solid currentColor;
+  border-color: #2B2B2B;
+  border-radius: 1rem;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.installation-option:hover {
+  box-shadow: 0 0.75rem 1.75rem color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.installation-option__icon {
+  margin-bottom: 1rem;
+  color: #985AB5;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.installation-option:nth-child(2) .installation-option__icon {
+  color: #985AB5;
+}
+
+.installation-option__title {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.installation-option__description {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.75;
+}

@@ -26,7 +26,20 @@ export class ComponentService {
     "reusable-card-list": () => import('./reusable-card-list/reusable-card-list.component'),
     "authentication-management": () => import('./authentication-management/authentication-management.component'),
     "banner-management": () => import('./banner-management/banner-management.component'),
-    'ngine-guide': () => import('./ngine-guide/ngine-guide.component'),
+    "ngine-guide": () => import('./ngine-guide/ngine-guide.component'),
+    "welcome-part-1": () => import('./welcome-part-1/welcome-part-1.component'),
+    "welcome-part-2": () => import('./welcome-part-2/welcome-part-2.component'),
+    "donation": () => import('./donation/donation.component'),
+    "new-version": () => import('./new-version/new-version.component'),
+    "footer": () => import('./footer/footer.component'),
+    "feature-analytic": () => import('./feature-analytic/feature-analytic.component'),
+    "feature-description": () => import('./feature-description/feature-description.component'),
+    "docu-intro": () => import('./docu-intro/docu-intro.component'),
+    "feature-lib-landing": () => import('./feature-lib-landing/feature-lib-landing.component'),
+    "contact": () => import('./contact/contact.component'),
+    'installation-overview': () => import('./installation-overview/installation-overview.component'),
+    'installation-docker-compose': () => import('./installation-docker-compose/installation-docker-compose.component'),
+    'installation-local': () => import('./installation-local/installation-local.component'),
 };
 
   /**
