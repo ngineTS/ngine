@@ -13,7 +13,10 @@
             </span>
             <mat-form-field appearance="outline" class="col-md-4">
                 <mat-label>Roles</mat-label>
-                <mat-select [(ngModel)]="userNgModel[user.id].roleIds" multiple>
+                <mat-select multiple
+                    [(ngModel)]="userNgModel[user.id].roleIds"
+                    [style.color]="_navigation.typographyStyle.color"
+                >
                     @for (role of roles; track role.id) {
                         <mat-option [value]="role.id">
                             {{ role.displayLabel }}
