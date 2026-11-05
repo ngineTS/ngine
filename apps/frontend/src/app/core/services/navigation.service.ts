@@ -103,10 +103,20 @@ export class NavigationService {
      * Open navigation managenement form to add or edit navigation.
      * If navigation is provided then edit navigation else add navigation.
      * 
+     * After the form is closed,
+     * if 
+     * 
      * @param parent The parent navigation.
-     * @param navigation The navigation to edit.
+     * @param navigation The navigation to edit (optional).
+     * 
      * @param yPos The y position for the new navigation (optional).
-     * @param parentRoute The parent route.
+     *    It is necessary when adding a navigation from components container
+     *    in order to display it inside the view port after creation.
+     * 
+     * @param parentRoute The parent route (optional).
+     *    It is necessary in case user want to add a redirect button. 
+     *    in order to create a new route under the parent route.
+     *    It is not necessary when editing a navigation because the route already exists
      */
     manageNavigation(
         parent: Navigation,
