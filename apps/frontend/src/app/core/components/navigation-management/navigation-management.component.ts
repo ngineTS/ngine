@@ -43,7 +43,8 @@ export class NavigationManagementComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) 
     public data: { 
       navigation: Navigation | undefined,
-      parentGroupId: string,
+      parent: Navigation,
+      yPos: number | undefined,
     },
     private _formBuilder: FormBuilder,
     private _navigationService: NavigationService,
@@ -53,7 +54,7 @@ export class NavigationManagementComponent implements OnInit {
     private _containerLayoutService: ContainerLayoutService,
     private _http: HttpClient,
     private _mediaService: MediaService,
-    private _navigationTypeService: NavigationTypeService
+    private _navigationTypeService: NavigationTypeService,
   ) {}
 
   navigationForm!: FormGroup;
@@ -122,7 +123,7 @@ export class NavigationManagementComponent implements OnInit {
    */
   createForm() {
     this.navigationForm = this._formBuilder.group({
-      parentGroupId: [this.data.navigation?.parentGroupId ?? this.data.parentGroupId, Validators.required],
+      parentGroupId: [this.data.navigation?.parentGroupId ?? this.data.parent.groupId, Validators.required],
       navigationTypeId: [this.data.navigation?.navigationTypeId ?? null, Validators.required],
       url: [this.data.navigation?.url ?? null],
       icon: [this.data.navigation?.icon ?? null],
@@ -202,15 +203,25 @@ export class NavigationManagementComponent implements OnInit {
     }
     //ADD
     else {
+      //assign order based on sisters lenght
       this.navigationForm.value["order"] = this.flatNavigations.filter(obj => 
         obj.parentGroupId === this.navigationForm.get('parentGroupId')?.value).length;
-      this._navigationService
-        .saveNavigation(this.navigationForm.value)
+        //save navigation
+        this._navigationService
+        .saveNavigation(this.navigationForm.value, this.data.yPos)
         .pipe(take(1))
         .subscribe({
-          next: () => {
+          next: result => {
             this._snackbarService.showSuccessSnackBar('Element added successfully.');
-            this.refreshRoutingAndRedirect(this.navigationForm.get('parentGroupId')?.value);
+            //store new access token
+            localStorage.setItem('access_token', result.access_token);
+            //push saved navigation to parent children
+            result.navigation.level = this.data.parent.level + 1;
+            this.data.parent.children
+              ? this.data.parent.children.push(result.navigation)
+              : this.data.parent.children = [result.navigation];
+            //close dialog providing navigation saved
+            this._dialogRef.close(result.navigation);
           }
         });
     }

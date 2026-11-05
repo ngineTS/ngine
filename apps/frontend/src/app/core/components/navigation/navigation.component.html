@@ -55,12 +55,12 @@
         class="navigation-div"
         [style.overflow-y]="hasScrollBar ? 'auto' : 'hidden'"
         [style.width]="windowWidth > windowWidthLimit
-            ? (_navigation.containerLayout.width ?? 25) * _componentsContainerService.currentWidthPx! / 100 + 'px' 
+            ? (_navigation.containerLayout.width ?? 30) * _componentsContainerService.currentWidthPx! / 100 + 'px' 
             : '100%'"
         [style.height]="windowWidth > windowWidthLimit 
             ?   _navigation.containerLayout.heightFitContent
                 ? 'fit-content'
-                : ((_navigation.containerLayout.height ?? 25) * windowHeight / 100 + 'px')
+                : ((_navigation.containerLayout.height ?? 30) * windowHeight / 100 + 'px')
             : 'unset'"
         [style.max-height]="windowWidth > windowWidthLimit ? 'unset' : 'fit-content'"
         [style.min-height]="windowWidth > windowWidthLimit ? 'unset' : 'max-content'"

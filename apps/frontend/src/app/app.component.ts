@@ -244,8 +244,15 @@ export class AppComponent implements OnInit {
    * @param type The type ('horizontal bar', 'vertical bar' or 'navigation').
    */
   openFormToAddNavigationBarOrNavigation(type: 'horizontal' | 'vertical' | 'navigation'): void {
+    const yPos = this.drawerContent.nativeElement.scrollTop / window.innerHeight * 100;
+
     if (type === 'navigation') {
-      this._navigationService.manageNavigation(this._componentsContainerService.activeNavigation.groupId);
+      this._navigationService.manageNavigation(
+        this._componentsContainerService.activeNavigation,
+        undefined,
+        yPos,
+        this._componentsContainerService.parentRoute
+      );
     }
     else {
       this._menuService.createNavigationBar(this._componentsContainerService.activeNavigation.id, type)
@@ -282,6 +289,7 @@ export class AppComponent implements OnInit {
 
   openPublishDialog(): void {
     const navigations = Array.from(this._navigationService.navigationsWithChangesList.values());
+    navigations.sort((a, b) => a.displayLabel.localeCompare(b.displayLabel))
 
     this._matDialog.open(NavigationPublishDialogComponent, {
       width: '500px',

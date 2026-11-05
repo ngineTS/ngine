@@ -30,23 +30,12 @@ export class AppService {
     if (navigations && navigations.length > 0) {
       for (const navigation of navigations) {
         const redirectButtonChildren = this.getRedirectButtonChildren(navigation);
-        /* case 1: one of the children at least is a redirect-button --> create routing module */
-        if (redirectButtonChildren && redirectButtonChildren.length > 0) {
-          routes.push(
-            this.createRoutingModule(
-              redirectButtonChildren,
-              navigation
-            )
-          );
-        }
-        /* case 2: no redirect-button in children or no children at all --> load components container */
-        else {
-          routes.push({
-            path: navigation.name,
-            data: { navigation: navigation },
-            loadComponent: () => import('../components/components-container/components-container.component').then(m => m.ComponentsContainer),
-          });
-        }
+        routes.push(
+          this.createRoutingModule(
+            redirectButtonChildren,
+            navigation
+          )
+        );
       }
     }
 

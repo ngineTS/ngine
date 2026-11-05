@@ -410,18 +410,23 @@ export class NavigationService {
    * 
    * 1. Add draft and audit data and save navigation.
    * 2. Assign style properties.
-   * 3. If navigation is a menu button then create menu.
+   * 3. If navigation is a menu button then create menu and assign style properties.
+   * 4. Add navigation saved to the user navigation permissions and generate new token.
    * 
    * @param createNavigationDto The navigation to save.
    * @param parentNavigation The parent navigation.
    * @param userId The user id from request.
+   * @parem yPos The y position for the new navigation (optional).
    * @returns The navigation saved.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
     parentNavigation: Navigation,
+    yPos: number | undefined,
     userId: string,
-  ): Promise<Navigation> {
+    userEmail: string,
+    userNavigationPermissions: NavigationPermissions
+  ): Promise<{ navigation: Navigation, access_token: string }> {
     /* 1 */
     createNavigationDto['isDraft'] = true;
     createNavigationDto['groupId'] = uuidv4();
@@ -431,29 +436,59 @@ export class NavigationService {
     createNavigationDto['updatedBy'] = userId;
     createNavigationDto['updatedDate'] = new Date();
 
-    const menuButtonNavigationType = await this._navigationTypeRepository.findOne({
-      where: { name: 'menu-button' }
+    const navigationType = await this._navigationTypeRepository.findOne({
+      where: { id: createNavigationDto.navigationTypeId }
     });
-    if (createNavigationDto.navigationTypeId === menuButtonNavigationType!.id) {
+    if (!navigationType) {
+      throw new NotFoundException(`Navigation type with id ${createNavigationDto.navigationTypeId} not found.`);
+    }
+
+    if (navigationType.name === 'menu-button') {
       createNavigationDto['unpublishedChanges'].push('menu');
     }
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
     const isInsideMenu = parentNavigation.menu ? true : false;
-    await this._containerLayoutService.createObjectContainerLayout({ refId: navigationSaved.id });
-    await this._containerStyleService.createObjectDefaultContainerStyle(navigationSaved.id, isInsideMenu);
-    await this._typographyStyleService.createObjectDefaultTypographyStyle(navigationSaved.id);
+    navigationSaved.containerLayout = await this._containerLayoutService.createObjectContainerLayout({
+      refId: navigationSaved.id,
+      yPos: yPos ?? null,
+      xPos: 0
+    });
+    navigationSaved.containerStyle = await this._containerStyleService.createObjectDefaultContainerStyle(navigationSaved.id, isInsideMenu);
+    navigationSaved.typographyStyle = await this._typographyStyleService.createObjectDefaultTypographyStyle(navigationSaved.id);
+    navigationSaved.navigationType = navigationType;
 
     /* 3. */
-    if (navigationSaved.navigationTypeId === menuButtonNavigationType!.id) {
+    if (navigationType.name === 'menu-button') {
       const menuSaved = await this._menuService.createMenu(navigationSaved.id);
-      await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id });
-      await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
-      await this._typographyStyleService.createObjectDefaultTypographyStyle(menuSaved.id);
+      menuSaved.containerLayout = await this._containerLayoutService.createObjectContainerLayout({ refId: menuSaved.id });
+      menuSaved.containerStyle = await this._containerStyleService.createObjectDefaultContainerStyle(menuSaved.id);
+      menuSaved.typographyStyle = await this._typographyStyleService.createObjectDefaultTypographyStyle(menuSaved.id);
+      navigationSaved.menu = menuSaved;
     }
 
-    return navigationSaved;
+    /* 4. */
+    const parentPermission = userNavigationPermissions.find(
+      obj => obj.navigationGroupId === navigationSaved.parentGroupId
+    );
+    const updatedPermissions = [
+      ...userNavigationPermissions,
+      {
+        navigationGroupId: navigationSaved.groupId,
+        permissionName: parentPermission!.permissionName,
+        navigationTypeName: navigationType.name,
+      },
+    ];
+    navigationSaved['permissionName'] = parentPermission!.permissionName;
+
+    const accessToken = await this._authService.getAccessToken({
+      sub: userId,
+      userEmail,
+      userNavigationPermissions: updatedPermissions,
+    });
+
+    return { navigation: navigationSaved, access_token: accessToken };
   }
 
   /**
