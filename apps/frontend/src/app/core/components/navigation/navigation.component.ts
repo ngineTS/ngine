@@ -189,7 +189,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    */
   onSaveSizeClick(): void {
     const navigationSize = {
-      width: this.navigationDiv.nativeElement.offsetWidth / window.innerWidth * 100,
+      width: this.navigationDiv.nativeElement.offsetWidth / this._componentsContainerService.currentWidthPx! * 100,
       height: this.navigationDiv.nativeElement.offsetHeight / window.innerHeight * 100,
       heightFitContent: false
     };
@@ -214,8 +214,8 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Reset navigation size to his previous value.
    */
   onResetSizeClick(): void {
-    this.windowWidth = this.windowWidth + 0.01; //used to force change detection (TODO: improve)
-    this.windowHeight = this.windowHeight + 0.01; //used to force change detection (TODO: improve)
+    this._componentsContainerService.currentWidthPx! += 0.01; //used to force change detection (TODO: improve)
+    this.windowHeight += 0.01; //used to force change detection (TODO: improve)
     this.isResizing = false;
   }
 
