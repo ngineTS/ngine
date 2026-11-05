@@ -533,7 +533,7 @@ export class NavigationService {
           updatedDate: new Date(),
         };
 
-        this._navigationRepository.update(
+        await this._navigationRepository.update(
           { groupId: navigation.groupId },
           navigationToUpdate,
         );
