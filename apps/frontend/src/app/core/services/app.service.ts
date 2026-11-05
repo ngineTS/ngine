@@ -29,7 +29,7 @@ export class AppService {
     const routes: Routes = [];
     if (navigations && navigations.length > 0) {
       for (const navigation of navigations) {
-        const redirectButtonChildren = this.retrieveRedirectButtonChildren(navigation);
+        const redirectButtonChildren = this.getRedirectButtonChildren(navigation);
         /* case 1: one of the children at least is a redirect-button --> create routing module */
         if (redirectButtonChildren && redirectButtonChildren.length > 0) {
           routes.push(
@@ -55,7 +55,9 @@ export class AppService {
 
   /**
    * Create App Routing:
-   * - load global navigation and create main routing module
+   * - load nested navigations
+   * - store all navigations with changes pending to be published
+   * - create main routing module
    * - add Unhautorised and Not found route
    * - redirect to route name passed if one else initiate initial navigation
    * 
@@ -68,8 +70,11 @@ export class AppService {
         this._componentsContainerService.userGlobalNavigationPermission = result.navigation.permissionName;
         this._componentsContainerService.activeNavigation = result.navigation;
         console.log('navigation', result.navigation);
+        
+        this.storeDirtyNavigations(result.navigation);
+        
         let route = this.createRoutingModule(
-          this.retrieveRedirectButtonChildren(result.navigation) ?? [],
+          this.getRedirectButtonChildren(result.navigation) ?? [],
           result.navigation
         );
 
@@ -89,7 +94,6 @@ export class AppService {
         }
 
         route.children?.push(stripeSuccessPayment, unauthorisedRoute, notFoundRoute);
-        
         this._router.resetConfig([route]);
         
         if (redirectRouteName) {
@@ -155,22 +159,20 @@ export class AppService {
   }
 
   /**
-   * Recursively retrieve redirect button children.
-   * This method is used to create the navigation routes because only redirect-button can be routes.
+   * Get redirect-button childrens for given navigation.
+   * Redirect buttons are used to create routes for the app.
    * 
-   * It also marks navigations with changes pending to be published.
+   * If child is not a redirect-button (for instance it is a menu-button), 
+   * traverse his descendants until a redirect-button is found.
    * 
-   * @param navigation The navigation which we want to filter the children on redirect-button type only.
-   * @param redirectButtonsArray The current array of redirect button children.
-   * @returns The array of redirect button children.
+   * @param navigation The navigation where to start the process.
+   * @param redirectButtonsArray The current array of redirect buttons.
+   * @returns The array of redirect buttons.
    */
-  retrieveRedirectButtonChildren(
+  getRedirectButtonChildren(
     navigation: Navigation,
     redirectButtonsNavigations: Array<Navigation> = []
   ): Array<Navigation> {
-    if (navigation.unpublishedChanges?.length > 0) {
-      this.addNavigationToNavigationsWithChangesList(navigation);
-    }
 
     if (navigation.children) {
       redirectButtonsNavigations.push(
@@ -178,7 +180,9 @@ export class AppService {
       );
 
       for (const child of navigation.children) {
-        redirectButtonsNavigations.push(...this.retrieveRedirectButtonChildren(child));
+        if (child.navigationType.name !== 'redirect-button') {
+          redirectButtonsNavigations.push(...this.getRedirectButtonChildren(child));
+        }
       }
     }
 
@@ -220,14 +224,21 @@ export class AppService {
   }
 
   /**
-   * Add navigation to the 'Navigations with changes' list.
+   * Traverse the whole tree strating from given node
+   * to retrieve node with changes to be published and store them in service file.
    * 
-   * It is used to get information globally about which navigations have changes pending to be published.
-   * 
-   * @param navigation The navigation.
+   * @param navigation The node where to start tree traversal.
    */
-  addNavigationToNavigationsWithChangesList(navigation: Navigation) {
-    this._navigationService.navigationsWithChangesList.set(navigation.id, navigation);
+  storeDirtyNavigations(navigation: Navigation) {
+    if (navigation.unpublishedChanges?.length > 0) {
+      this._navigationService.navigationsWithChangesList.set(navigation.id, navigation);
+    }
+
+    if (navigation.children) {
+      for (const child of navigation.children) {
+        this.storeDirtyNavigations(child);
+      }
+    }
   }
 
 }

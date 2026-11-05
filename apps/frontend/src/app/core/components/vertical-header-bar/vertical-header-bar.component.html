@@ -168,14 +168,16 @@
               </i>
 
               <mat-menu #navigationOptionsMenu="matMenu">
-                <button mat-menu-item (click)="copyStyle(node)">
-                  <i class="bi bi-brush me-2"></i>
-                  Copy style
-                </button>
-                <button mat-menu-item (click)="editNavigationStyle(node)">
-                  <i class="bi bi-marker-tip me-2"></i>
-                  Edit style
-                </button>
+                @if (treeLevel === 0) {
+                  <button mat-menu-item (click)="copyStyle(node)">
+                    <i class="bi bi-brush me-2"></i>
+                    Copy style
+                  </button>
+                  <button mat-menu-item (click)="editNavigationStyle(node)">
+                    <i class="bi bi-marker-tip me-2"></i>
+                    Edit style
+                  </button>
+                }
                 <button mat-menu-item (click)="manageNavigation(node)">
                   <i class="bi bi-gear me-2"></i>
                   Settings
