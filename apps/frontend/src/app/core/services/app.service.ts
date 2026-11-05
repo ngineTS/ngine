@@ -18,10 +18,6 @@ export class AppService {
   /**
    * Create route for each navigation and return final array of routes.
    * 
-   * @description
-   * Each route can redirect either to a routing module or to ComponentsContainer component.
-   * If the navigation has at least one redirect-button in chidlren then create routing module,
-   * else load ComponentsContainer component.
    * @param navigations The array of navigations used to create routes.
    * @returns The routes set up.
    */
