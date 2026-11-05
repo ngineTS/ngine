@@ -129,8 +129,8 @@ export class NavigationService {
                     }
                 } 
                 //add case: 
-                // - navigation has an id so update direclty unpublishedChanges store.
-                // - if navigation is redirect-button then update app routing based on parent route.
+                // - navigation has an id so update directly unpublishedChanges store.
+                // - if navigation is redirect-button then creat new route under parent route.
                 else {
                     this.navigationsWithChangesList.set(navigationValue.id!, navigationValue as Navigation);
                     if (navigationValue.navigationType!.name === 'redirect-button') {
