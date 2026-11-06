@@ -108,11 +108,16 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Lifecycle hook called after component template has been initialized.
    * 
    * - Load component.
+   * - Emit navigation top and height information to parent.
    * - Create navigation size observer.
    */
   ngAfterViewInit(): void {
     this.loadComponent();
     setTimeout(() => {
+      this.onSizeChange.emit({
+        navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
+        navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
+      });
       this.createSizeObserver();
     }, 500);
   }
