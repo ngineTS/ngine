@@ -18,10 +18,6 @@ export class AppService {
   /**
    * Create route for each navigation and return final array of routes.
    * 
-   * @description
-   * Each route can redirect either to a routing module or to ComponentsContainer component.
-   * If the navigation has at least one redirect-button in chidlren then create routing module,
-   * else load ComponentsContainer component.
    * @param navigations The array of navigations used to create routes.
    * @returns The routes set up.
    */
@@ -30,23 +26,12 @@ export class AppService {
     if (navigations && navigations.length > 0) {
       for (const navigation of navigations) {
         const redirectButtonChildren = this.getRedirectButtonChildren(navigation);
-        /* case 1: one of the children at least is a redirect-button --> create routing module */
-        if (redirectButtonChildren && redirectButtonChildren.length > 0) {
-          routes.push(
-            this.createRoutingModule(
-              redirectButtonChildren,
-              navigation
-            )
-          );
-        }
-        /* case 2: no redirect-button in children or no children at all --> load components container */
-        else {
-          routes.push({
-            path: navigation.name,
-            data: { navigation: navigation },
-            loadComponent: () => import('../components/components-container/components-container.component').then(m => m.ComponentsContainer),
-          });
-        }
+        routes.push(
+          this.createRoutingModule(
+            redirectButtonChildren,
+            navigation
+          )
+        );
       }
     }
 
@@ -55,47 +40,48 @@ export class AppService {
 
   /**
    * Create App Routing:
-   * - load nested navigations
-   * - store all navigations with changes pending to be published
-   * - create main routing module
-   * - add Unhautorised and Not found route
-   * - redirect to route name passed if one else initiate initial navigation
+   * 1. Load nested navigations.
+   * 2. Store access token, global navigation and permission and dirty navigations.
+   * 3. Create main routing module.
+   * 4. Add extra routes.
+   * 5. Reset routing and redirect to route name if provided.
    * 
    * @param redirectRouteName The name of the route to redirect after app routing creation.
    */
   createAppRouting(redirectRouteName?: string): void {
+    /** 1. Load nested navigations. */
     this._navigationService.getNestedNavigations().subscribe({
       next: result => {
+        /** 2. Store access token, global navigation and permission and dirty navigations. */
+        console.log('navigation', result.navigation); 
         localStorage.setItem('access_token', result.access_token);
         this._componentsContainerService.userGlobalNavigationPermission = result.navigation.permissionName;
         this._componentsContainerService.activeNavigation = result.navigation;
-        console.log('navigation', result.navigation);
-        
         this.storeDirtyNavigations(result.navigation);
         
+        /** 3. Create main routing module. */
         let route = this.createRoutingModule(
           this.getRedirectButtonChildren(result.navigation) ?? [],
           result.navigation
         );
 
+        /** 4. Add extra routes. */
         const unauthorisedRoute: Route = {
           path: 'unauthorised',
           loadComponent: () => import('../auth/components/unauthorised/unauthorised.component').then(m => m.UnauthorisedComponent)
         }
-
         const notFoundRoute: Route = {
           path: '**',
           redirectTo: ''
         }
-
         const stripeSuccessPayment = {
           path: 'stripe-success',
           loadComponent: () => import('../../core/components/stripe-success/stripe-success.component').then(m => m.StripeSuccessComponent)
         }
-
         route.children?.push(stripeSuccessPayment, unauthorisedRoute, notFoundRoute);
-        this._router.resetConfig([route]);
         
+        /** 5. Reset routing and redirect to route name if provided. */
+        this._router.resetConfig([route]);
         if (redirectRouteName) {
           this._router.navigateByUrl(redirectRouteName);
         }
@@ -159,10 +145,10 @@ export class AppService {
   }
 
   /**
-   * Get redirect-button childrens for given navigation.
+   * Recursively get redirect-button children for given navigation.
    * Redirect buttons are used to create routes for the app.
    * 
-   * If child is not a redirect-button (for instance it is a menu-button), 
+   * If child is not a redirect button (for instance it is a menu-button), 
    * traverse his descendants until a redirect-button is found.
    * 
    * @param navigation The navigation where to start the process.

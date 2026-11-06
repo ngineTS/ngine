@@ -62,6 +62,7 @@ export class ComponentsContainer implements OnInit {
   /**
    * Lifecyle hook called after the component has been initialized.
    * - retrieve route snapshot data properties
+   * - store parent route and active navigation in service
    * - sort navigation children for mobile screen responsivity
    */
   ngOnInit(): void {
@@ -69,6 +70,7 @@ export class ComponentsContainer implements OnInit {
     this.windowHeight = window.innerHeight;
     this.navigation = this._route.snapshot.data["navigation"];
     this._componentsContainerService.activeNavigation = this.navigation;
+    this._componentsContainerService.parentRoute = this._route.parent?.routeConfig;
 
     if (this.windowWidth < this.windowWidthLimit) {
       this.navigation.children?.sort((a, b) => 

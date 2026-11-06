@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Navigation } from "../models/navigation.interface";
 import { environment } from "../../../environments/environment";
@@ -6,6 +6,7 @@ import { retry, take, tap } from "rxjs";
 import { NavigationManagementComponent } from "../components/navigation-management/navigation-management.component";
 import { MatDialog } from "@angular/material/dialog";
 import { SnackBarService } from "./snackbar.service";
+import { Route } from "@angular/router";
 
 export type UpdateReturnType = {
     affected: number;
@@ -49,13 +50,21 @@ export class NavigationService {
     }
 
     /**
-     * Save navigations.
+     * Save navigation.
+     * 
+     * If y position is provided, it will be used to set the position of the new navigation.
      * 
      * @param navigations The navigations to save.
+     * @param yPos The y position for the new navigation (optional).
      * @returns An observable of the navigation saved.
      */
-    saveNavigation(navigations: Navigation) {
-        return this._http.post<Navigation>(`${environment.APIURL}navigation`, navigations);
+    saveNavigation(navigations: Navigation, yPos?: number) {
+        if(!yPos) {
+            return this._http.post<{ navigation: Navigation, access_token: string }>(`${environment.APIURL}navigation`, navigations);
+        }
+
+        const params = new HttpParams().set('yPos', yPos);
+        return this._http.post<{ navigation: Navigation, access_token: string }>(`${environment.APIURL}navigation`, navigations, { params });
     }
 
     /**
@@ -92,26 +101,60 @@ export class NavigationService {
 
     /**
      * Open navigation managenement form to add or edit navigation.
-     * If navigation is passed then edit navigation else add navigation.
+     * If navigation is provided then edit navigation else add navigation.
      * 
-     * @param parentGroupId The parent reference.
-     * @param navigation The navigation to edit.
+     * After form is closed:
+     * - push navigation to unpublished navigations store.
+     * - if redirect button has been added, create new route in active route children.
+     * 
+     * @param parent The parent navigation.
+     * @param navigation The navigation to edit (optional).
+     * @param yPos The y position for the new navigation (optional).
+     *    It is necessary when adding a navigation from components container
+     *    in order to display it inside the view port after creation.
+     * @param parentRoute The parent route (optional).
+     *    It is necessary in case user want to add a redirect button
+     *    in order to create a new route under the parent route.
+     *    It is not necessary when editing a navigation because the route already exists.
      */
-    manageNavigation(parentGroupId: string, navigation?: Navigation) {
+    manageNavigation(
+        parent: Navigation,
+        navigation?: Navigation,
+        yPos?: number,
+        parentRoute?: Route | null
+    ) {
         const dialogRef = this._matDialog.open(NavigationManagementComponent, {
-            data: {
-                navigation: navigation ?? undefined,
-                parentGroupId: parentGroupId
-            }
+            data: { yPos, navigation, parent }
         });
 
-        // assign new value (only in case of edit and no parent change)
         dialogRef.afterClosed().subscribe((navigationValue: Partial<Navigation>) => {
-            if (navigation && navigationValue) {
-                navigation.unpublishedChanges.push('navigation');
-                this.navigationsWithChangesList.set(navigation.id, navigation);
-                for (const [key, value] of Object.entries(navigationValue)) {
-                    navigation[key] = value;
+            if (navigationValue) {
+                //edit case: assign new property to navigation provided and update unpublishedChanges store.
+                if (navigation) {
+                    navigation.unpublishedChanges.push('navigation');
+                    this.navigationsWithChangesList.set(navigation.id, navigation);
+                    for (const [key, value] of Object.entries(navigationValue)) {
+                        navigation[key] = value;
+                    }
+                } 
+                //add case: 
+                // - navigation has an id so update directly unpublishedChanges store.
+                // - if navigation is redirect-button then creat new route under parent route.
+                else {
+                    this.navigationsWithChangesList.set(navigationValue.id!, navigationValue as Navigation);
+                    if (navigationValue.navigationType!.name === 'redirect-button') {
+                        const newRoute: Route = {
+                            path: navigationValue.name,
+                            data: { navigation: navigationValue },
+                            children: [
+                                {
+                                    path: '',
+                                    loadComponent: () => import('../components/components-container/components-container.component').then(m => m.ComponentsContainer),
+                                }
+                            ]
+                        }
+                        parentRoute?.children ? parentRoute.children.push(newRoute) : parentRoute!.children = [newRoute];
+                    }
                 }
             }
         });

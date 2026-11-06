@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { Navigation } from '../../models/navigation.interface';
 import { NgTemplateOutlet } from '@angular/common';
-import { Menu, StylePayload } from '../../models/menu.interface';
+import { StylePayload } from '../../models/menu.interface';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CustomButtonComponent } from '../custom-button/custom-button.component';
 import { NavigationService } from '../../services/navigation.service';
@@ -12,7 +12,7 @@ import { DeepFormConfig } from '../../models/form-input.interface';
 import { TypographyStyleService } from '../../services/typography-style.service';
 import { ContainerStyleService } from '../../services/container-style.service';
 import { SideNavService } from '../../services/side-nav.service';
-import { StyleService } from '../../services/style.service';
+import { ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -36,7 +36,7 @@ export class MenuButtonComponent {
     private _containerStyleService: ContainerStyleService,
     private _typographyStyleService: TypographyStyleService,
     private _sideNavService: SideNavService,
-    private _styleService: StyleService,
+    private _route: ActivatedRoute,
   ) { }
 
   /** The main menu button. */
@@ -62,10 +62,15 @@ export class MenuButtonComponent {
    * Methods called on 'add navigation' button click.
    * Open form to add navigation.
    * 
-   * @param parentGroupId The parent group id where to add a navigation.
+   * @param parent The parent navigation.
    */
-  addNavigation(parentGroupId: string) {
-    this._navigationService.manageNavigation(parentGroupId);
+  addNavigation(parent: Navigation) {
+    this._navigationService.manageNavigation(
+      parent,
+      undefined,
+      undefined,
+      this._route.parent?.routeConfig
+    );
   }
 
   /**
@@ -74,9 +79,10 @@ export class MenuButtonComponent {
    * 
    * @param event The click event.
    * @param navigation The navigation to edit.
+   * @param parent The parent navigation
    */
-  editNavigation(navigation: Navigation) {
-    this._navigationService.manageNavigation(navigation.parentGroupId, navigation);
+  editNavigation(navigation: Navigation, parent: Navigation) {
+    this._navigationService.manageNavigation(parent, navigation);
   }
 
   /**

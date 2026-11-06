@@ -109,7 +109,12 @@ export class HeaderBarComponent implements OnInit {
    * @param navigation The navigation to edit (optional).
    */
   manageNavigation(navigation?: Navigation): void {
-    this._navigationService.manageNavigation(this.navigation.groupId, navigation);
+    this._navigationService.manageNavigation(
+      this.navigation,
+      navigation,
+      undefined,
+      this._route.routeConfig
+    );
   }
 
   /**
