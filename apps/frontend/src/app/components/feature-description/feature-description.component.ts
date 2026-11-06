@@ -16,7 +16,7 @@ export class FeatureDescriptionComponent extends ManagementBaseComponent<Feature
 
   constructor(private _mediaService: MediaService) { super(); }
 
-  videoUrl: Observable<string> | undefined;
+  imageUrl: Observable<string> | undefined;
 
   ngOnInit() {
     this._tableName = 'feature_description';
@@ -39,12 +39,16 @@ export class FeatureDescriptionComponent extends ManagementBaseComponent<Feature
       },
       fileName: {
         type: 'file',
-        alias: 'Video',
+        alias: 'Image',
         value: '',
         validators: [Validators.required],
         order: 2
       }
     }
+
+    setTimeout(() => {
+      this.imageUrl = this._mediaService.getFileUrl(this._items[0].fileName);
+    }, 500);
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {
@@ -56,6 +60,14 @@ export class FeatureDescriptionComponent extends ManagementBaseComponent<Feature
         this._addItem();
       }
     }
+  }
+
+  onEditFeature() {
+    this._editItem(this._items[0]);
+  }
+
+  onAddFeature() {
+    this._addItem();
   }
 
 

@@ -65,7 +65,7 @@ export class MediaService {
   }
 
   /**
-   * Get media by file name.
+   * Get media record by file name (not the file itself).
    * 
    * @param fileName The file name.
    * @returns The media.
