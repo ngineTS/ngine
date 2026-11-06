@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
@@ -20,6 +20,8 @@ export class NavigationController {
   @Post()
   async saveNavigation(
     @Body() createNavigationDto: CreateNavigationDto,
+    @Query('yPos') yPos: number | undefined,
+    @UserEmail() userEmail: string,
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
@@ -31,7 +33,10 @@ export class NavigationController {
     return this._navigationService.saveNavigation(
       createNavigationDto,
       parentNavigation!,
+      yPos,
       userId,
+      userEmail,
+      userNavigationPermissions
     );
   }
 
