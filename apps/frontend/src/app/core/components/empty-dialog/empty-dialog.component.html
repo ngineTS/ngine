@@ -1,26 +1,8 @@
 @if (navigationToLoad) {
     <div class="row justify-content-center"
+        style="border: none"
         [style.backgroundColor]="navigationToLoad.containerStyle.isBackgroundTransparent
             ? 'transparent' : navigationToLoad.containerStyle.backgroundColor"
-        [style.border]="navigationToLoad.containerStyle.borderWidth + 'px ' +
-            navigationToLoad.containerStyle.borderStyle + ' ' +
-            navigationToLoad.containerStyle.borderColor"
-        [style.border-top-style]="navigationToLoad.containerStyle.isBorderTopHidden ?
-            'none' : navigationToLoad.containerStyle.borderStyle"
-        [style.border-right-style]="navigationToLoad.containerStyle.isBorderRightHidden ?
-            'none' : navigationToLoad.containerStyle.borderStyle"
-        [style.border-bottom-style]="navigationToLoad.containerStyle.isBorderBottomHidden ?
-            'none' : navigationToLoad.containerStyle.borderStyle"
-        [style.border-left-style]="navigationToLoad.containerStyle.isBorderLeftHidden ?
-            'none' : navigationToLoad.containerStyle.borderStyle"
-        [style.border-top-left-radius.px]="navigationToLoad.containerStyle.borderTopLeftRadius"
-        [style.border-top-right-radius.px]="navigationToLoad.containerStyle.borderTopRightRadius"
-        [style.border-bottom-right-radius.px]="navigationToLoad.containerStyle.borderBottomRightRadius"
-        [style.border-bottom-left-radius.px]="navigationToLoad.containerStyle.borderBottomLeftRadius"
-        [style.margin-top.px]="navigationToLoad.containerLayout.marginTop"
-        [style.margin-right.px]="navigationToLoad.containerLayout.marginRight"
-        [style.margin-bottom.px]="navigationToLoad.containerLayout.marginBottom"
-        [style.margin-left.px]="navigationToLoad.containerLayout.marginLeft"
         [style.padding-top.px]="navigationToLoad.containerLayout.paddingTop"
         [style.padding-right.px]="navigationToLoad.containerLayout.paddingRight"
         [style.padding-bottom.px]="navigationToLoad.containerLayout.paddingBottom"
@@ -48,7 +30,7 @@
                 
                 @if (navigationToLoad.unpublishedChanges.length > 0) {
                     <button class="gear-button" matButton="outlined" [matMenuTriggerFor]="publishMenu">
-                        <i class="bi bi-upload"></i>
+                        <i class="bi bi-upload" [matTooltip]="'Publish changes'"></i>
                     </button>
 
                     <mat-menu #publishMenu="matMenu">

@@ -18,10 +18,6 @@ export class AppService {
   /**
    * Create route for each navigation and return final array of routes.
    * 
-   * @description
-   * Each route can redirect either to a routing module or to ComponentsContainer component.
-   * If the navigation has at least one redirect-button in chidlren then create routing module,
-   * else load ComponentsContainer component.
    * @param navigations The array of navigations used to create routes.
    * @returns The routes set up.
    */
@@ -29,24 +25,13 @@ export class AppService {
     const routes: Routes = [];
     if (navigations && navigations.length > 0) {
       for (const navigation of navigations) {
-        const redirectButtonChildren = this.retrieveRedirectButtonChildren(navigation);
-        /* case 1: one of the children at least is a redirect-button --> create routing module */
-        if (redirectButtonChildren && redirectButtonChildren.length > 0) {
-          routes.push(
-            this.createRoutingModule(
-              redirectButtonChildren,
-              navigation
-            )
-          );
-        }
-        /* case 2: no redirect-button in children or no children at all --> load components container */
-        else {
-          routes.push({
-            path: navigation.name,
-            data: { navigation: navigation },
-            loadComponent: () => import('../components/components-container/components-container.component').then(m => m.ComponentsContainer),
-          });
-        }
+        const redirectButtonChildren = this.getRedirectButtonChildren(navigation);
+        routes.push(
+          this.createRoutingModule(
+            redirectButtonChildren,
+            navigation
+          )
+        );
       }
     }
 
@@ -55,43 +40,48 @@ export class AppService {
 
   /**
    * Create App Routing:
-   * - load global navigation and create main routing module
-   * - add Unhautorised and Not found route
-   * - redirect to route name passed if one else initiate initial navigation
+   * 1. Load nested navigations.
+   * 2. Store access token, global navigation and permission and dirty navigations.
+   * 3. Create main routing module.
+   * 4. Add extra routes.
+   * 5. Reset routing and redirect to route name if provided.
    * 
    * @param redirectRouteName The name of the route to redirect after app routing creation.
    */
   createAppRouting(redirectRouteName?: string): void {
+    /** 1. Load nested navigations. */
     this._navigationService.getNestedNavigations().subscribe({
       next: result => {
+        /** 2. Store access token, global navigation and permission and dirty navigations. */
+        console.log('navigation', result.navigation); 
         localStorage.setItem('access_token', result.access_token);
         this._componentsContainerService.userGlobalNavigationPermission = result.navigation.permissionName;
         this._componentsContainerService.activeNavigation = result.navigation;
-        console.log('navigation', result.navigation);
+        this.storeDirtyNavigations(result.navigation);
+        
+        /** 3. Create main routing module. */
         let route = this.createRoutingModule(
-          this.retrieveRedirectButtonChildren(result.navigation) ?? [],
+          this.getRedirectButtonChildren(result.navigation) ?? [],
           result.navigation
         );
 
+        /** 4. Add extra routes. */
         const unauthorisedRoute: Route = {
           path: 'unauthorised',
           loadComponent: () => import('../auth/components/unauthorised/unauthorised.component').then(m => m.UnauthorisedComponent)
         }
-
         const notFoundRoute: Route = {
           path: '**',
           redirectTo: ''
         }
-
         const stripeSuccessPayment = {
           path: 'stripe-success',
           loadComponent: () => import('../../core/components/stripe-success/stripe-success.component').then(m => m.StripeSuccessComponent)
         }
-
         route.children?.push(stripeSuccessPayment, unauthorisedRoute, notFoundRoute);
         
+        /** 5. Reset routing and redirect to route name if provided. */
         this._router.resetConfig([route]);
-        
         if (redirectRouteName) {
           this._router.navigateByUrl(redirectRouteName);
         }
@@ -155,22 +145,20 @@ export class AppService {
   }
 
   /**
-   * Recursively retrieve redirect button children.
-   * This method is used to create the navigation routes because only redirect-button can be routes.
+   * Recursively get redirect-button children for given navigation.
+   * Redirect buttons are used to create routes for the app.
    * 
-   * It also marks navigations with changes pending to be published.
+   * If child is not a redirect button (for instance it is a menu-button), 
+   * traverse his descendants until a redirect-button is found.
    * 
-   * @param navigation The navigation which we want to filter the children on redirect-button type only.
-   * @param redirectButtonsArray The current array of redirect button children.
-   * @returns The array of redirect button children.
+   * @param navigation The navigation where to start the process.
+   * @param redirectButtonsArray The current array of redirect buttons.
+   * @returns The array of redirect buttons.
    */
-  retrieveRedirectButtonChildren(
+  getRedirectButtonChildren(
     navigation: Navigation,
     redirectButtonsNavigations: Array<Navigation> = []
   ): Array<Navigation> {
-    if (navigation.unpublishedChanges?.length > 0) {
-      this.addNavigationToNavigationsWithChangesList(navigation);
-    }
 
     if (navigation.children) {
       redirectButtonsNavigations.push(
@@ -178,7 +166,9 @@ export class AppService {
       );
 
       for (const child of navigation.children) {
-        redirectButtonsNavigations.push(...this.retrieveRedirectButtonChildren(child));
+        if (child.navigationType.name !== 'redirect-button') {
+          redirectButtonsNavigations.push(...this.getRedirectButtonChildren(child));
+        }
       }
     }
 
@@ -220,14 +210,21 @@ export class AppService {
   }
 
   /**
-   * Add navigation to the 'Navigations with changes' list.
+   * Traverse the whole tree strating from given node
+   * to retrieve node with changes to be published and store them in service file.
    * 
-   * It is used to get information globally about which navigations have changes pending to be published.
-   * 
-   * @param navigation The navigation.
+   * @param navigation The node where to start tree traversal.
    */
-  addNavigationToNavigationsWithChangesList(navigation: Navigation) {
-    this._navigationService.navigationsWithChangesList.set(navigation.id, navigation);
+  storeDirtyNavigations(navigation: Navigation) {
+    if (navigation.unpublishedChanges?.length > 0) {
+      this._navigationService.navigationsWithChangesList.set(navigation.id, navigation);
+    }
+
+    if (navigation.children) {
+      for (const child of navigation.children) {
+        this.storeDirtyNavigations(child);
+      }
+    }
   }
 
 }

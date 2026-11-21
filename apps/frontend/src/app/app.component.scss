@@ -32,9 +32,8 @@
   color: #2B2B2B;
 }
 
-
 .toolbar {
-  position: absolute;
+  position: fixed;
   bottom: 50px;
   right: 50px;
   z-index: 10000000;

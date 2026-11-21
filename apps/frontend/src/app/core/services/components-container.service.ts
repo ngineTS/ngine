@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Navigation } from "../models/navigation.interface";
+import { Route } from "@angular/router";
 
 @Injectable({
     providedIn: 'root'
@@ -25,4 +26,9 @@ export class ComponentsContainerService {
      * The active navigation.
      */
     activeNavigation!: Navigation;
+
+    /**
+     * The parent route of the component container. For instance for WELCOME page, the parent route is WELCOME.
+     */
+    parentRoute: Route | undefined | null;
 }

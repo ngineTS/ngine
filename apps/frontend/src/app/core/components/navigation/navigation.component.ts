@@ -70,7 +70,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
     private _typographyStyleService: TypographyStyleService,
     private _sideNavService: SideNavService,
     private _mediaService: MediaService,
-    private _componentsContainerService: ComponentsContainerService,
+    public _componentsContainerService: ComponentsContainerService,
     public _styleService: StyleService
   ) { 
     super(); 
@@ -108,11 +108,16 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Lifecycle hook called after component template has been initialized.
    * 
    * - Load component.
+   * - Emit navigation top and height information to parent.
    * - Create navigation size observer.
    */
   ngAfterViewInit(): void {
     this.loadComponent();
     setTimeout(() => {
+      this.onSizeChange.emit({
+        navigationTopPx: this.navigationDiv.nativeElement.getBoundingClientRect().top,
+        navigationHeightPx: this.navigationDiv.nativeElement.getBoundingClientRect().height
+      });
       this.createSizeObserver();
     }, 500);
   }
@@ -189,7 +194,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    */
   onSaveSizeClick(): void {
     const navigationSize = {
-      width: this.navigationDiv.nativeElement.offsetWidth / window.innerWidth * 100,
+      width: this.navigationDiv.nativeElement.offsetWidth / this._componentsContainerService.currentWidthPx! * 100,
       height: this.navigationDiv.nativeElement.offsetHeight / window.innerHeight * 100,
       heightFitContent: false
     };
@@ -214,8 +219,8 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Reset navigation size to his previous value.
    */
   onResetSizeClick(): void {
-    this.windowWidth = this.windowWidth + 0.01; //used to force change detection (TODO: improve)
-    this.windowHeight = this.windowHeight + 0.01; //used to force change detection (TODO: improve)
+    this._componentsContainerService.currentWidthPx! += 0.01; //used to force change detection (TODO: improve)
+    this.windowHeight += 0.01; //used to force change detection (TODO: improve)
     this.isResizing = false;
   }
 
@@ -235,7 +240,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Open form to edit navigation properties.
    */
   editNavigation(): void {
-    this._navigationService.manageNavigation(this._navigation.parentGroupId, this._navigation);
+    this._navigationService.manageNavigation(this._componentsContainerService.activeNavigation, this._navigation);
   }
 
   /**
@@ -317,7 +322,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
    * Resize navigation to match the screen size.
    */
   onFullScreenClick() {
-    const width = this._componentsContainerService.currentWidthPx! / this.windowWidth * 97.5;
+    const width = 97.5;
     const height = 99;
     const xPos = 1;
     this._navigation.containerLayout.width = width;
@@ -335,6 +340,7 @@ export class NavigationComponent extends NavigationBaseComponent implements OnIn
         if (this.containerRef) {
           this._sizeChanged = !this._sizeChanged;
           this.containerRef.setInput('_sizeChanged', this._sizeChanged);
+          this.isResizing = false;
         }
       });
   }

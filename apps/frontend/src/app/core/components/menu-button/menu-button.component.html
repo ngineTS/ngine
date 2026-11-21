@@ -51,7 +51,7 @@
             
             <!-- item is a menu -->
             @if (child.navigationType.name === 'menu-button') {
-                <ng-container *ngTemplateOutlet="deepMenu; context: { $implicit: child }"></ng-container>
+                <ng-container *ngTemplateOutlet="deepMenu; context: { $implicit: child, parent: navigation }"></ng-container>
             }
             
             <!-- item is a custom button-->
@@ -78,7 +78,7 @@
                                 <i class="bi bi-marker-tip me-2"></i>
                                 Edit style
                             </button>
-                            <button mat-menu-item (click)="editNavigation(child)">
+                            <button mat-menu-item (click)="editNavigation(child, navigation)">
                                 <i class="bi bi-gear me-2"></i>
                                 Settings
                             </button>
@@ -108,7 +108,7 @@
         <!-- Main menu  'Add Navigation' item -->
         @if (navigation.permissionName?.includes('edit')) {
             <button mat-menu-item 
-                (click)="addNavigation(navigation.groupId)"
+                (click)="addNavigation(navigation)"
                 [style.font-weight]="navigation.typographyStyle.fontWeight"
                 [style.color]="isButtonHoveredRecord['add-nav-main'] ?
                     navigation.typographyStyle.activeColor :
@@ -123,7 +123,7 @@
 
 
         <!-- Deep menu template-->
-        <ng-template #deepMenu let-navigation>
+        <ng-template #deepMenu let-navigation let-parent="parent">
             
             <!-- Deep menu button -->
             <div mat-menu-item
@@ -143,11 +143,11 @@
             >
                 <div class="col" [style.opacity]="navigation.isDisabled ? '0.4' : '1'">
                     @if (navigation.icon) {
-                        <i [class]="'bi bi-' + navigation.icon"></i>
+                        <i [class]="'bi bi-' + navigation.icon" class="me-1"></i>
                     }
 
                     @if (!navigation.showIconOnly) {
-                        <span class="ms-1">{{ navigation.displayLabel }}</span>
+                        <span>{{ navigation.displayLabel }}</span>
                     }
                 </div>
 
@@ -163,7 +163,7 @@
                             <i class="bi bi-marker-tip me-2"></i>
                             Edit style
                         </button>
-                        <button mat-menu-item (click)="editNavigation(navigation)">
+                        <button mat-menu-item (click)="editNavigation(navigation, parent)">
                             <i class="bi bi-gear me-2"></i>
                             Settings
                         </button>
@@ -239,7 +239,7 @@
                                         <i class="bi bi-marker-tip me-2"></i>
                                         Edit style
                                     </button>
-                                    <button mat-menu-item (click)="editNavigation(child)">
+                                    <button mat-menu-item (click)="editNavigation(child, navigation)">
                                         <i class="bi bi-gear me-2"></i>
                                         Settings
                                     </button>
@@ -268,7 +268,7 @@
                     <!-- Deep menu 'Add navigation' item -->
                     @if (navigation.permissionName?.includes('edit')) {
                         <button mat-menu-item
-                            (click)="addNavigation(navigation.groupId)"
+                            (click)="addNavigation(navigation)"
                             [style.font-weight]="navigation.typographyStyle.fontWeight"
                             [style.color]="isButtonHoveredRecord['add-nav-deep'] ?
                                 navigation.typographyStyle.activeColor :
