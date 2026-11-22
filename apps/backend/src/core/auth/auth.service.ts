@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/domains/user/entities/user.entity';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Request } from 'express';
 
 
@@ -23,9 +23,32 @@ export class AuthService {
    * @returns The JWT guest authentication token
    */
   async guestSignIn() {
-    const guestUser = await this._userRepository.findOne({
-      where: { name: 'guest' }
-    });
+    const guestUser = await this._userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.userRoles',
+        'userRoles',
+        'userRoles.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'userRoles.role',
+        'role',
+        'role.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'role.roleNavigationPermissions',
+        'roleNavigationPermissions',
+        'roleNavigationPermissions.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'roleNavigationPermissions.permission',
+        'permission',
+        'permission.deletedDate IS NULL'
+      )
+      .where('user.name = :guestName', { guestName: 'guest' })
+      .andWhere('user.deletedDate IS NULL')
+      .getOne();
+    
     if (!guestUser) {
       throw new NotFoundException('No guest user found.');
     }
@@ -33,13 +56,14 @@ export class AuthService {
     const payload = {
       sub: guestUser.id,
       userEmail: guestUser.emailAddress,
+      userRoles: guestUser.userRoles,
       userNavigationPermissions: []
     };
 
     /* return access token. */
     const accessToken = await this.getAccessToken(payload);
     return { access_token: accessToken };
-  }           
+  }
 
   /**
    * Sign user in.
@@ -49,12 +73,33 @@ export class AuthService {
    * @returns The JWT authentication token.
    */
   async signIn(emailAddress: string, password: string) {
-    const user = await this._userRepository.findOne({
-        where: { 
-          emailAddress: emailAddress.toLowerCase(),
-          deletedDate: IsNull()
-        }
-    });
+    const user = await this._userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.userRoles',
+        'userRoles',
+        'userRoles.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'userRoles.role',
+        'role',
+        'role.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'role.roleNavigationPermissions',
+        'roleNavigationPermissions',
+        'roleNavigationPermissions.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'roleNavigationPermissions.permission',
+        'permission',
+        'permission.deletedDate IS NULL'
+      )
+      .where('user.emailAddress = :emailAddress', {
+        emailAddress: emailAddress.toLowerCase()
+      })
+      .andWhere('user.deletedDate IS NULL')
+      .getOne();
     
     if (!user) {
       throw new NotFoundException("This email address doesn't exist.");
@@ -69,9 +114,10 @@ export class AuthService {
       throw new BadRequestException("Your password is incorrect.");
     }
 
-    const payload = { 
+    const payload = {
       sub: user.id,
       userEmail: user.emailAddress,
+      userRoles: user.userRoles,
       userNavigationPermissions: []  
     };
 
