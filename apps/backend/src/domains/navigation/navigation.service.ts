@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { In, IsNull, Repository } from 'typeorm';
+import { ArrayContains, In, IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { AuthService } from 'src/core/auth/auth.service';
@@ -408,7 +408,7 @@ export class NavigationService {
   /**
    * Save navigation with default style.
    * 
-   * 1. Add draft and audit data and save navigation.
+   * 1. Add draft and audit data, generate ancestor group ids and save navigation.
    * 2. Assign style properties.
    * 3. If navigation is a menu button then create menu and assign style properties.
    * 4. Add navigation saved to the user navigation permissions and generate new token.
@@ -416,7 +416,7 @@ export class NavigationService {
    * @param createNavigationDto The navigation to save.
    * @param parentNavigation The parent navigation.
    * @param userId The user id from request.
-   * @parem yPos The y position for the new navigation (optional).
+   * @param yPos The y position for the new navigation (optional).
    * @returns The navigation saved.
    */
   async saveNavigation(
@@ -446,6 +446,10 @@ export class NavigationService {
     if (navigationType.name === 'menu-button') {
       createNavigationDto['unpublishedChanges'].push('menu');
     }
+
+    const ancestorGroupIds = await this.generateAncestorGroupIds(parentNavigation.groupId);
+    createNavigationDto['ancestorGroupIds'] = ancestorGroupIds;
+
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
@@ -497,7 +501,8 @@ export class NavigationService {
    * 1. Get existing navigation from db.
    * 2. Push properties to 'unpublishedChanges' keeping uniqueness
    * 3. If parent has changed and old parent has no more children then delete his menu.
-   * 4. Add audit data and update navigation.
+   * 4. If parent has changed then update ancestorGroupIds for navigation and all descendants.
+   * 5. Add audit data and update navigation.
    * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
@@ -523,8 +528,10 @@ export class NavigationService {
     setOfKeys.add('navigation');
     updateNavigationDto['unpublishedChanges'] = [...setOfKeys];
     
-    /* 3. */
     if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
+      updateNavigationDto['unpublishedChanges'].push('parent');
+      
+      /* 3. */
       const oldParentNavigation = await this._navigationRepository.findOne({
         relations: ['children', 'menu'],
         where: { 
@@ -532,15 +539,21 @@ export class NavigationService {
           deletedDate: IsNull(),
         },
       });
+
       if (oldParentNavigation?.menu && oldParentNavigation?.children?.filter(obj => !obj.deletedDate).length === 1) {
         await this._menuService.remove(oldParentNavigation.menu.id);
         await this._containerLayoutService.deleteByRefId(oldParentNavigation.menu.id);
         await this._containerStyleService.deleteByRefId(oldParentNavigation.menu.id);
         await this._typographyStyleService.deleteByRefId(oldParentNavigation.menu.id);
       }
+
+      /* 4. */
+      const ancestorGroupIds = await this.generateAncestorGroupIds(updateNavigationDto.parentGroupId!);
+      updateNavigationDto['ancestorGroupIds'] = ancestorGroupIds;
+      await this.updateDescendantAncestorGroupIds(dbNavigation, ancestorGroupIds);
     }
 
-    /* 4. */
+    /* 5. */
     updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.update(id, updateNavigationDto);
@@ -792,6 +805,10 @@ export class NavigationService {
             await this._containerStyleService.updateByRefId(navigationPublishedRecord.menu.id, containerStylePropertiesToUpdate);
           }
         }
+
+        if (relation === 'parent') {
+          await this.copyDescendantAncestorIds(navigationGroupId, 'publish');
+        }
       }
 
       let {
@@ -915,6 +932,10 @@ export class NavigationService {
         const { id: __, refId: _r2, ...containerStylePropertiesToUpdate } = navigationPublishedRecord.menu.containerStyle;
         await this._containerStyleService.updateByRefId(navigationDraftRecord.menu.id, containerStylePropertiesToUpdate);
       }
+
+      if (relation === 'parent') {
+        await this.copyDescendantAncestorIds(navigationGroupId, 'cancel');
+      }
     }
 
     /* 3. */
@@ -944,7 +965,7 @@ export class NavigationService {
   /**
    * Get navigations where navigation type is redirect-button only.
    * 
-   * @returns A promise of an array of navigations.
+   * @returns A promise of an array of redirect button navigations.
    */
   getRedirectButtons() {
     return this._navigationRepository.find({
@@ -961,5 +982,126 @@ export class NavigationService {
       }
     })
   }
-  
+
+  /**
+   * Generate the list of ancestor group ids for a given parent group id.
+   * 
+   * @param parentGroupId The group id of the parent.
+   * @returns A promise of array of ancestor group ids.
+   */
+  async generateAncestorGroupIds(parentGroupId: string): Promise<Array<string>> {
+    const navigation = await this._navigationRepository.findOne({
+      select: { ancestorGroupIds: true },
+      where: {
+        groupId: parentGroupId,
+        isDraft: true,
+        deletedDate: IsNull()
+      }
+    });
+
+    if (!navigation) {
+      throw new NotFoundException(
+        `Draft navigation with groupId ${parentGroupId} not found.`
+      );
+    }
+
+    return [...navigation.ancestorGroupIds, parentGroupId];
+  }
+
+  /**
+   * Update the ancestor group ids for all descendants of a navigation when its parent changes.
+   * 
+   * 1. Retrieve all descendants (draft) of the navigation provided.
+   * 2. Remove the old ancestor group ids from each descendant's ancestorGroupIds.
+   * 3. Add the new ancestor group ids to each descendant's ancestorGroupIds.
+   * 4. Save the updated descendants back to the database.
+   * 
+   * @param navigation The navigation which parent will change.
+   * @param newAncestorGroupIds The new list of ancestorGroupsIds for the navigation provided.
+   */
+  async updateDescendantAncestorGroupIds(
+    navigation: Navigation,
+    newAncestorGroupIds: Array<string>
+  ) {
+    /* 1. */
+    const oldAncestorGroupIds = navigation.ancestorGroupIds;
+    const draftDescendants = await this._navigationRepository.find({
+      where: {
+        ancestorGroupIds: ArrayContains([navigation.groupId]),
+        isDraft: true,
+        deletedDate: IsNull()
+      }
+    });
+
+    draftDescendants.forEach(descendant => {
+      /* 2. */
+      descendant.ancestorGroupIds = descendant.ancestorGroupIds.filter(
+        groupId => !oldAncestorGroupIds.includes(groupId)
+      );
+      /* 3. */
+      descendant.ancestorGroupIds.push(...newAncestorGroupIds);
+    });
+
+    /* 4. */
+    await this._navigationRepository.save(draftDescendants);
+  }
+
+
+  /**
+   * 
+   * Copy the ancestor group ids from the draft navigation records
+   * to the published navigation records for a given navigation group id.
+   * 
+   * @param navigationGroupId The navigation group id used to find descendants.
+   * @param type The type of operation to perform.
+   */
+  async copyDescendantAncestorIds(navigationGroupId: string, type: 'cancel' | 'publish') {
+    const draftDescendants = await this._navigationRepository.find({
+      where: {
+        ancestorGroupIds: ArrayContains([navigationGroupId]),
+        isDraft: true,
+        deletedDate: IsNull()
+      }
+    });
+
+    if (draftDescendants.length === 0) {
+      return;
+    }
+
+    const publishDescendants = await this._navigationRepository.find({
+      where: {
+        ancestorGroupIds: ArrayContains([navigationGroupId]),
+        isDraft: false,
+        deletedDate: IsNull()
+      }
+    });
+
+    const descendantsToUpdateByGroupId = new Map<string, Navigation>();
+    if (type === 'cancel') {
+      draftDescendants.forEach(descendant =>
+        descendantsToUpdateByGroupId.set(descendant.groupId, descendant)
+      );
+    }
+    else {
+      publishDescendants.forEach(descendant =>
+        descendantsToUpdateByGroupId.set(descendant.groupId, descendant)
+      );
+    }
+
+    const descendantsToCopy = type === 'cancel' ? publishDescendants : draftDescendants;
+    const descendantsToUpdate = descendantsToCopy.map(obj => {
+      const descendant = descendantsToUpdateByGroupId.get(obj.groupId);
+      if (!descendant) {
+        throw new NotFoundException(
+          `Published navigation with groupId ${obj.groupId} not found.`
+        );
+      }
+
+      descendant.ancestorGroupIds = [...obj.ancestorGroupIds];
+      return descendant;
+    });
+
+    await this._navigationRepository.save(descendantsToUpdate);
+  }
+
 }
