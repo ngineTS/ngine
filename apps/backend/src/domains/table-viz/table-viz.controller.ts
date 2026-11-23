@@ -4,19 +4,14 @@ import { CreateTableVizDto } from './dto/create-table-viz.dto';
 import { UpdateTableVizDto } from './dto/update-table-viz.dto';
 import { Feature, NavigationTypeNameArray, Action } from 'src/core/decorators/role.decorator';
 import { RolesGuard } from 'src/core/guards/role.guard';
-import { CustomTableValidatorService } from '../custom-table/custom-table-validator.service';
 import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
-import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 
 @Feature('TableViz')
 @NavigationTypeNameArray(['content-visualization', 'content-management'])
 @Controller('table-viz')
 export class TableVizController {
 
-  constructor(
-    private readonly _tableVizService: TableVizService,
-    private readonly _customTableValidatorService: CustomTableValidatorService
-  ) {}
+  constructor(private readonly _tableVizService: TableVizService) {}
 
   @Action('add')
   @UseGuards(RolesGuard)
@@ -37,16 +32,12 @@ export class TableVizController {
     return this._tableVizService.findTableNames();
   }
 
-  @Get('table-content/:tableName')
+  @Action('edit')
+  @UseGuards(RolesGuard)
+  @Get('table-content/:tableName/:navigationGroupId')
   async findTableContentByTableName(
     @Param('tableName') tableName: string,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
   ) {
-    await this._customTableValidatorService.validPermission(
-      tableName,
-      'view', 
-    userNavigationPermissions
-  );
     return this._tableVizService.findTableContentByTableName(tableName);
   }
 

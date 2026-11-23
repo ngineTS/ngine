@@ -1,9 +1,10 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
 import { ContainerLayout } from "./entities/container-layout.entity";
 import { Repository } from "typeorm";
 import { Navigation } from "../navigation/entities/navigation.entity";
+import { UserNavigationPermissions } from "src/core/decorators/user-navigation-permissions.decorator";
+import { RoleNavigationPermission } from "../role-navigation-permission/entities/role-navigation-permission.entity";
 
 @Injectable()
 export class containerLayoutValidatorService {
@@ -27,7 +28,7 @@ export class containerLayoutValidatorService {
    */
   async validPermission(
     containerLayoutId: string,
-    userNavigationPermissions: NavigationPermissions
+    @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ): Promise<Navigation> {
     const containerLayout = await this._containerLayoutRepository.findOneBy({ id: containerLayoutId });
 
@@ -46,8 +47,14 @@ export class containerLayoutValidatorService {
     }
 
     if (
-      !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
-        ?.permissionName.includes('edit')
+      !userNavigationPermissions.find(
+        obj => obj.navigationGroupId === navigation.groupId 
+        && obj.permission.name.includes('edit')
+      ) || 
+      !userNavigationPermissions.find(
+        obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId)
+        && obj.permission.name.includes('edit')
+      )
     ) {
       throw new ForbiddenException();
     }

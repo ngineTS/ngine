@@ -7,7 +7,6 @@ import { ArrayContains, In, IsNull, Repository } from 'typeorm';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { MenuService } from '../menu/menu.service';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
-import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 import { ContainerStyleService } from '../container-style/container-style.service';
 import { TypographyStyleService } from '../typography-style/typography-style.service';
 import { ContainerLayoutService } from '../container-layout/container-layout.service';

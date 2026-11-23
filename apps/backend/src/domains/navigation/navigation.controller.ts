@@ -23,7 +23,7 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    this._navigationValidatorService.validAddPermission(
+    await this._navigationValidatorService.validAddPermission(
       createNavigationDto,
       userNavigationPermissions
     );
@@ -68,29 +68,29 @@ export class NavigationController {
   }
 
   @Post('bulk-update')
-  updateNavigations(
+  async updateNavigations(
     @Body() navigations: Array<Navigation>,
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    this._navigationValidatorService.validEditPermissionOnArrayOfNavigations(
-      navigations,
+    await this._navigationValidatorService.validAddPermission(
+      navigations[0],
       userNavigationPermissions
     );
     return this._navigationService.updateNavigations(navigations, userId);
-
   }
 
   @Post('delete')
-  removeNavigation(
+  async removeNavigation(
     @Body() navigation: Navigation,
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    this._navigationValidatorService.validDeletePermission(
+    await this._navigationValidatorService.validDeletePermission(
       navigation,
       userNavigationPermissions
     );
+
     return this._navigationService.removeNavigation(navigation, userId);
   }
 
@@ -100,7 +100,7 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    this._navigationValidatorService.validPublishPermission(
+    await this._navigationValidatorService.validPublishPermission(
       navigationGroupId,
       userNavigationPermissions
     );
@@ -113,13 +113,13 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    for (const groupId of navigationGroupIds) {
-      this._navigationValidatorService.validPublishPermission(
-        groupId,
-        userNavigationPermissions
-      );
+    await this._navigationValidatorService.validPublishPermission(
+      '00000000-0000-0000-0000-000000000000',
+      userNavigationPermissions
+    );
 
-      this._navigationService.publishNavigation(groupId, userId);
+    for (const groupId of navigationGroupIds) {
+      await this._navigationService.publishNavigation(groupId, userId);
     }
 
     return { message: 'Navigations published succesfully.'}
@@ -131,7 +131,7 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    this._navigationValidatorService.validPublishPermission(
+    await this._navigationValidatorService.validPublishPermission(
       navigationGroupId,
       userNavigationPermissions
     );

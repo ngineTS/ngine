@@ -25,15 +25,17 @@ export class NavigationValidatorService {
    * @param userNavigationPermissions The user navigation permission from request.
    * @throws {ForbiddenException} If user doesn't have 'edit' permission on parent.
    */
-  validAddPermission(
+  async validAddPermission(
     createNavigationDto: CreateNavigationDto,
     userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permission.name.includes('edit')
-      )
-    ) {
+    const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+      userNavigationPermissions,
+      createNavigationDto.parentGroupId,
+      'edit'
+    );
+  
+    if (!hasUserPermission) {
       throw new ForbiddenException();
     }
   }
@@ -66,17 +68,25 @@ export class NavigationValidatorService {
 
     if (
       !userNavigationPermissions.find(
-        obj => obj.navigationGroupId === dbNavigation.groupId && obj.permission.name.includes('edit')
+        obj => obj.navigationGroupId === dbNavigation.groupId 
+        && obj.permission.name.includes('edit')
+      ) || 
+      !userNavigationPermissions.find(
+        obj => dbNavigation.ancestorGroupIds.includes(obj.navigationGroupId)
+        && obj.permission.name.includes('edit')
       )
     ) {
       throw new ForbiddenException();
     }
 
     if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
-      if (
-        !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permission.name.includes('edit')
-      )) {
+      const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+        userNavigationPermissions,
+        updateNavigationDto.parentGroupId!,
+        'edit'
+      );
+
+      if (!hasUserPermission) {
         throw new ForbiddenException();
       }
     }
@@ -84,27 +94,6 @@ export class NavigationValidatorService {
     return dbNavigation;
   }
 
-  /**
-   * Valid permission to edit array of navigation.
-   * 
-   * @param navigations The array of navigation to update.
-   * @param userNavigationPermissions The user navigation permissions from request.
-   * @throws {ForbiddenException} If user doesn't have edit permission on one of the navigations.
-   */
-  validEditPermissionOnArrayOfNavigations(
-    navigations: Array<Navigation>,
-    userNavigationPermissions: Array<RoleNavigationPermission>
-  ) {
-    navigations.forEach(navigation => {
-      if (
-        !userNavigationPermissions.find(obj =>
-          obj.navigationGroupId === navigation.groupId && obj.permission.name.includes('edit')
-        )
-      ) {
-        throw new ForbiddenException();
-      }
-    });
-  }
 
   /**
    * Valid permission to delete navigation.
@@ -114,20 +103,22 @@ export class NavigationValidatorService {
    * @throws {ForbiddenException} If user doesn't have delete permission on navigation 
    * @throws {BadRequestException} If navigation is global navigation.
    */
-  validDeletePermission(
+  async validDeletePermission(
     navigation: Navigation,
     userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === navigation.groupId && obj.permission.name.includes('delete')
-      )
-    ) {
-      throw new ForbiddenException();
-    }
-
     if (navigation.name === 'global') {
       throw new BadRequestException('Global navigation cannot be deleted.');
+    }
+
+    const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+      userNavigationPermissions,
+      navigation.groupId,
+      'delete'
+    );
+
+    if (!hasUserPermission) {
+      throw new ForbiddenException();
     }
   }
 
@@ -275,17 +266,69 @@ export class NavigationValidatorService {
    * @param navigationGroupId The navigation group id to publish.
    * @param userNavigationPermissions The user's navigation permissions.
    */
-  validPublishPermission(
+  async validPublishPermission(
     navigationGroupId: string,
     userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
+    const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+      userNavigationPermissions,
+      navigationGroupId,
+      'edit'
+    );
+
+    if (!hasUserPermission) {
+      throw new ForbiddenException();
+    }
+  }
+
+  /**
+   * Valid user permission for specific action by navigation group Id.
+   * 
+   * 1. Check if user has permission on the navigation.
+   * 2. If not, check if user has permission on the ancestor of the navigation.
+   * 
+   * @param userNavigationPermissions The user navigation permissions.
+   * @param navigationGroupId The navigation group id to check.
+   * @param action The action.
+   * @returns True if user has permission, false if not.
+   */
+  async validUserPermissionByNavigationGroupId(
+    userNavigationPermissions: Array<RoleNavigationPermission>,
+    navigationGroupId: string,
+    action: string
+  ) {
+    /* 1. */
     if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === navigationGroupId && obj.permission.name.includes('edit')
+      userNavigationPermissions.find(
+        obj => obj.navigationGroupId === navigationGroupId
+        && obj.permission.name.includes(action)
       )
     ) {
-      throw new ForbiddenException(`You don't have permission to publish navigation with groupId ${navigationGroupId}`);
+      return true;
     }
+
+    /* 2. */
+    const navigation = await this._navigationRepository.findOne({
+      where: {
+        deletedDate: IsNull(),
+        groupId: navigationGroupId,
+      }
+    });
+
+    if (!navigation) {
+      throw new NotFoundException(`Navigation with group id ${navigationGroupId} not found.`)
+    }
+
+    if (
+      userNavigationPermissions.find(
+        obj => navigation.ancestorGroupIds?.includes(obj.navigationGroupId)
+        && obj.permission.name.includes(action)
+      )
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
 }

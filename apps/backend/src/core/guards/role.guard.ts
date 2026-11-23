@@ -44,7 +44,7 @@ export class RolesGuard implements CanActivate {
 
       case "view":
         const navigationGroupId = params.navigationGroupId ?? params.navigationId;
-        /* if we look for a specific navigation id */
+        /* if we look for a specific navigation group id */
         if (navigationGroupId) {
           if (user.userNavigationPermissions?.find(obj => obj.navigationGroupId === navigationGroupId)) {
             return true;
@@ -53,7 +53,7 @@ export class RolesGuard implements CanActivate {
             return false;
           }
         }
-        /* if we look for a specific id then find navigation id associated */
+        /* if we look for a specific id then find navigation group id associated */
         if (params.id && entity) {
           const data = await this.findNavigationInTableById(entity, params.id);
           if (!data) {

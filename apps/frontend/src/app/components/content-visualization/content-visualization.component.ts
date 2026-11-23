@@ -50,7 +50,7 @@ export class ContentVisualizationComponent extends NavigationBaseComponent {
         switchMap(tableViz => {
           if (tableViz) {
             this.tableConfig = tableViz;
-            return this._http.get<Array<object>>(`${environment.APIURL}table-viz/table-content/${tableViz.tableName}`)
+            return this._http.get<Array<object>>(`${environment.APIURL}table-viz/table-content/${tableViz.tableName}/${this._navigation.groupId}`)
             .pipe(
               retry(2),
               take(1)

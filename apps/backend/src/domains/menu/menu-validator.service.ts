@@ -2,8 +2,8 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { InjectRepository } from "@nestjs/typeorm";
 import { Menu } from "./entities/menu.entity";
 import { Repository } from "typeorm";
-import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
 import { Navigation } from "../navigation/entities/navigation.entity";
+import { RoleNavigationPermission } from "../role-navigation-permission/entities/role-navigation-permission.entity";
 
 @Injectable()
 export class MenuValidatorService {
@@ -12,7 +12,7 @@ export class MenuValidatorService {
     @InjectRepository(Menu)
     private _menuRepository: Repository<Menu>,
     @InjectRepository(Navigation)
-    private _navigationRepository: Repository<Navigation>
+    private _navigationRepository: Repository<Navigation>,
   ) { }
 
   /**
@@ -31,7 +31,7 @@ export class MenuValidatorService {
    */
   async validPermissionToUpdateStyle(
     refId: string,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ): Promise<Navigation> {
     const navigation = await this._navigationRepository.findOneBy({ id: refId });
 
@@ -49,8 +49,14 @@ export class MenuValidatorService {
       }
 
       if (
-        !userNavigationPermissions.find(obj => obj.navigationGroupId === navigationAssociatedToMenu?.groupId)
-          ?.permissionName.includes('edit')
+        !userNavigationPermissions.find(
+          obj => obj.navigationGroupId === navigationAssociatedToMenu.groupId 
+          && obj.permission.name.includes('edit')
+        ) || 
+        !userNavigationPermissions.find(
+          obj => navigationAssociatedToMenu.ancestorGroupIds.includes(obj.navigationGroupId)
+          && obj.permission.name.includes('edit')
+        )
       ) {
         throw new ForbiddenException();
       }
@@ -64,9 +70,15 @@ export class MenuValidatorService {
       }
 
       if (
-        !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
-          ?.permissionName.includes('edit')
-      ) { 
+        !userNavigationPermissions.find(
+          obj => obj.navigationGroupId === navigation.groupId 
+          && obj.permission.name.includes('edit')
+        ) || 
+        !userNavigationPermissions.find(
+          obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId)
+          && obj.permission.name.includes('edit')
+        )
+      ) {
         throw new ForbiddenException();
       }
 
@@ -86,7 +98,7 @@ export class MenuValidatorService {
    */
   async validPermissionToCreateNavigationBar(
     navigationId: string,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const navigation = await this._navigationRepository.findOneBy({ id: navigationId });
     if (!navigation) {
@@ -98,11 +110,17 @@ export class MenuValidatorService {
     }
 
     if (
-      !userNavigationPermissions.find(obj => obj.navigationGroupId === navigation.groupId)
-        ?.permissionName.includes('edit')
-    ) {
-      throw new ForbiddenException();
-    }
+        !userNavigationPermissions.find(
+          obj => obj.navigationGroupId === navigation.groupId 
+          && obj.permission.name.includes('edit')
+        ) || 
+        !userNavigationPermissions.find(
+          obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId)
+          && obj.permission.name.includes('edit')
+        )
+      ) {
+        throw new ForbiddenException();
+      }
 
     return navigation;
   }
@@ -114,13 +132,15 @@ export class MenuValidatorService {
    * 
    * @param userNavigationPermissions The user navigation permissions.
    */
-  async validPermissionToUpdateDefaultStyle(userNavigationPermissions: NavigationPermissions) {
+  async validPermissionToUpdateDefaultStyle(userNavigationPermissions: Array<RoleNavigationPermission>) {
     if (
-      !userNavigationPermissions.find(obj => obj.navigationGroupId === '00000000-0000-0000-0000-000000000000')
-        ?.permissionName.includes('edit')
-    ) {
-      throw new ForbiddenException();
-    }
+        !userNavigationPermissions.find(
+          obj => obj.navigationGroupId === '00000000-0000-0000-0000-000000000000'
+          && obj.permission.name.includes('edit')
+        )
+      ) {
+        throw new ForbiddenException();
+      }
   }
 
 }
