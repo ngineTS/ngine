@@ -4,8 +4,8 @@ import { IsNull, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Navigation } from "./entities/navigation.entity";
 import { NavigationType } from "../navigation-type/entities/navigation-type.entity";
-import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
 import { CreateNavigationDto } from "./dto/create-navigation.dto";
+import { RoleNavigationPermission } from "../role-navigation-permission/entities/role-navigation-permission.entity";
 
 @Injectable()
 export class NavigationValidatorService {
@@ -27,11 +27,11 @@ export class NavigationValidatorService {
    */
   validAddPermission(
     createNavigationDto: CreateNavigationDto,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('edit')
+        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permission.name.includes('edit')
       )
     ) {
       throw new ForbiddenException();
@@ -51,7 +51,7 @@ export class NavigationValidatorService {
   async validEditPermission(
     id: string,
     updateNavigationDto: UpdateNavigationDto,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const dbNavigation = await this._navigationRepository.findOne({
       where: { id: id }
@@ -66,7 +66,7 @@ export class NavigationValidatorService {
 
     if (
       !userNavigationPermissions.find(
-        obj => obj.navigationGroupId === dbNavigation.groupId && obj.permissionName.includes('edit')
+        obj => obj.navigationGroupId === dbNavigation.groupId && obj.permission.name.includes('edit')
       )
     ) {
       throw new ForbiddenException();
@@ -75,7 +75,7 @@ export class NavigationValidatorService {
     if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
       if (
         !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permissionName.includes('edit')
+        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permission.name.includes('edit')
       )) {
         throw new ForbiddenException();
       }
@@ -93,12 +93,12 @@ export class NavigationValidatorService {
    */
   validEditPermissionOnArrayOfNavigations(
     navigations: Array<Navigation>,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     navigations.forEach(navigation => {
       if (
         !userNavigationPermissions.find(obj =>
-          obj.navigationGroupId === navigation.groupId && obj.permissionName.includes('edit')
+          obj.navigationGroupId === navigation.groupId && obj.permission.name.includes('edit')
         )
       ) {
         throw new ForbiddenException();
@@ -116,11 +116,11 @@ export class NavigationValidatorService {
    */
   validDeletePermission(
     navigation: Navigation,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === navigation.groupId && obj.permissionName.includes('delete')
+        obj.navigationGroupId === navigation.groupId && obj.permission.name.includes('delete')
       )
     ) {
       throw new ForbiddenException();
@@ -277,11 +277,11 @@ export class NavigationValidatorService {
    */
   validPublishPermission(
     navigationGroupId: string,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     if (
       !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === navigationGroupId && obj.permissionName.includes('edit')
+        obj.navigationGroupId === navigationGroupId && obj.permission.name.includes('edit')
       )
     ) {
       throw new ForbiddenException(`You don't have permission to publish navigation with groupId ${navigationGroupId}`);
