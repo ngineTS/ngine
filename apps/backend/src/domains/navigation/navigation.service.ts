@@ -68,7 +68,7 @@ export class NavigationService {
     }
 
     const {root, rootPermission } = await this.loadRootNavigation(userRoleNavigationPermissions);
-    await this.loadNavigationChildren(root, rootPermission, userRoleNavigationPermissions);
+    root.children = await this.loadNavigationChildren(root, rootPermission, userRoleNavigationPermissions);
     
     return root;
   }
@@ -116,8 +116,6 @@ export class NavigationService {
       root['permissionName'] = rootPermission.name;
     }
     
-    root.children = [];
-
     return { root, rootPermission };
   }
 
@@ -211,7 +209,7 @@ export class NavigationService {
     userRoleNavigationPermissions: Array<RoleNavigationPermission>
   ): boolean {
     const descendantPermission = userRoleNavigationPermissions.find(rnp =>
-      rnp.navigation.ancestorGroupIds.includes(navigation.groupId)
+      rnp.navigation.ancestorGroupIds?.includes(navigation.groupId)
     );
 
     if (descendantPermission) {

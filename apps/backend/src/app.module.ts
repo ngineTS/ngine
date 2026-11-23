@@ -49,6 +49,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.module';
 import { BannerModule } from './domains/banner/banner.module';
 import { Banner } from './domains/banner/entities/banner.entity';
+import { RoleGuardModule } from './core/guards/role-guard.module';
 
 
 
@@ -115,6 +116,7 @@ import { Banner } from './domains/banner/entities/banner.entity';
         limit: 100,
       },
     ]),
+    RoleGuardModule,
     NavigationModule,
     NavigationTypeModule,
     QuillEditorModule,

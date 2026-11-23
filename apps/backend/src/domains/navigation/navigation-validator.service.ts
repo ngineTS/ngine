@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { UpdateNavigationDto } from "./dto/update-navigation.dto";
-import { IsNull, Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Navigation } from "./entities/navigation.entity";
 import { NavigationType } from "../navigation-type/entities/navigation-type.entity";
@@ -16,7 +16,6 @@ export class NavigationValidatorService {
     @InjectRepository(NavigationType)
     private _navigationTypeRepository: Repository<NavigationType>,
   ) {}
-
 
   /**
    * Valid permission to add navigation.
@@ -326,6 +325,57 @@ export class NavigationValidatorService {
       )
     ) {
       return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Valid if user has permission on a navigation associated to given navigation type.
+   * 
+   * If user navigation permissions already include this navigation type return true
+   * otherwise find in database all navigations for this type and compare their ancestor with user role navigation permissions.
+   * 
+   * @param navigationTypeName The navigation type name to validate.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @param action The action.
+   * @returns True or false.
+   */
+  async validUserPermissionByNavigationType(
+    navigationTypeNames: Array<string>,
+    userNavigationPermissions: Array<RoleNavigationPermission>,
+    action: string
+  ) {
+    if (
+      userNavigationPermissions.find(obj => 
+        navigationTypeNames.includes(obj.navigation.navigationType.name)
+        && obj.permission.name.includes(action)
+      )
+    ) {
+      return true;
+    }
+
+    const navigations = await this._navigationRepository.find({
+      relations: ['navigationType'],
+      where: {
+        deletedDate: IsNull(),
+        navigationType: {
+          name: In(navigationTypeNames)
+        }
+      }
+    });
+
+    for (const navigation of navigations) {
+      for (const ancestorGroupId of navigation.ancestorGroupIds) {
+        if (
+          userNavigationPermissions.find(obj => 
+            obj.navigationGroupId === ancestorGroupId
+            && obj.permission.name.includes(action)
+          )
+        ) {
+          return true;
+        }
+      }
     }
 
     return false;

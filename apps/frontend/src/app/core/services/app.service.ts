@@ -51,18 +51,17 @@ export class AppService {
   createAppRouting(redirectRouteName?: string): void {
     /** 1. Load nested navigations. */
     this._navigationService.getNestedNavigations().subscribe({
-      next: result => {
+      next: navigation => {
         /** 2. Store access token, global navigation and permission and dirty navigations. */
-        console.log('navigation', result.navigation); 
-        localStorage.setItem('access_token', result.access_token);
-        this._componentsContainerService.userGlobalNavigationPermission = result.navigation.permissionName;
-        this._componentsContainerService.activeNavigation = result.navigation;
-        this.storeDirtyNavigations(result.navigation);
+        console.log(navigation); 
+        this._componentsContainerService.userGlobalNavigationPermission = navigation.permissionName;
+        this._componentsContainerService.activeNavigation = navigation;
+        this.storeDirtyNavigations(navigation);
         
         /** 3. Create main routing module. */
         let route = this.createRoutingModule(
-          this.getRedirectButtonChildren(result.navigation) ?? [],
-          result.navigation
+          this.getRedirectButtonChildren(navigation) ?? [],
+          navigation
         );
 
         /** 4. Add extra routes. */
@@ -195,6 +194,7 @@ export class AppService {
       .filter(obj => obj.parentGroupId === navigation.groupId);
     
     if (navigation.menu.isVertical) {
+      console.log('redt', redirectButtonNavigationsWithoutOnesInsideMenu);
       return redirectButtonNavigationsWithoutOnesInsideMenu
         .sort((a, b) => a.order - b.order)[0].name;
     }

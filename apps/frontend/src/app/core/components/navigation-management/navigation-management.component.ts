@@ -211,17 +211,14 @@ export class NavigationManagementComponent implements OnInit {
         .saveNavigation(this.navigationForm.value, this.data.yPos)
         .pipe(take(1))
         .subscribe({
-          next: result => {
+          next: navigation => {
             this._snackbarService.showSuccessSnackBar('Element added successfully.');
-            //store new access token
-            localStorage.setItem('access_token', result.access_token);
             //push saved navigation to parent children
-            result.navigation.level = this.data.parent.level + 1;
             this.data.parent.children
-              ? this.data.parent.children.push(result.navigation)
-              : this.data.parent.children = [result.navigation];
+              ? this.data.parent.children.push(navigation)
+              : this.data.parent.children = [navigation];
             //close dialog providing navigation saved
-            this._dialogRef.close(result.navigation);
+            this._dialogRef.close(navigation);
           }
         });
     }
