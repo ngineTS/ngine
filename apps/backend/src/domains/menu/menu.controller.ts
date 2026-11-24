@@ -4,7 +4,7 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { MenuValidatorService } from './menu-validator.service';
 import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
-import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
+import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 
 @Controller('menu')
 export class MenuController {
@@ -19,7 +19,7 @@ export class MenuController {
     @Param('navigationId', new ParseUUIDPipe()) navigationId: string,
     @Param('navigationBarType') navigationBarType: 'vertical' | 'horizontal',
     @UserId() userId: string,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+    @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const navigation = await this._menuValidatorService.validPermissionToCreateNavigationBar(navigationId, userNavigationPermissions);
     return this._menuService.createNavigationBar(navigation, userId, navigationBarType);
@@ -30,7 +30,7 @@ export class MenuController {
   async updateStyleProperties(
     @Param('refId') refId: string,
     @Body() updateMenuDto: UpdateMenuDto,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+    @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const navigation = await this._menuValidatorService.validPermissionToUpdateStyle(refId, userNavigationPermissions);
     return this._menuService.updateStyleProperties(navigation, refId, updateMenuDto);
@@ -40,7 +40,7 @@ export class MenuController {
   async updateDefaultStyleProperties(
     @Param('refId') refId: string,
     @Body() updateDefaultStyleDto: UpdateMenuDto,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+    @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     await this._menuValidatorService.validPermissionToUpdateDefaultStyle(userNavigationPermissions);
     return this._menuService.updateDefaultStyleProperties(refId, updateDefaultStyleDto);

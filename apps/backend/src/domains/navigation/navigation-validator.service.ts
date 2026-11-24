@@ -1,11 +1,11 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { UpdateNavigationDto } from "./dto/update-navigation.dto";
-import { IsNull, Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Navigation } from "./entities/navigation.entity";
 import { NavigationType } from "../navigation-type/entities/navigation-type.entity";
-import { NavigationPermissions } from "src/core/models/navigation-permissions.interface";
 import { CreateNavigationDto } from "./dto/create-navigation.dto";
+import { RoleNavigationPermission } from "../role-navigation-permission/entities/role-navigation-permission.entity";
 
 @Injectable()
 export class NavigationValidatorService {
@@ -17,7 +17,6 @@ export class NavigationValidatorService {
     private _navigationTypeRepository: Repository<NavigationType>,
   ) {}
 
-
   /**
    * Valid permission to add navigation.
    * 
@@ -25,15 +24,17 @@ export class NavigationValidatorService {
    * @param userNavigationPermissions The user navigation permission from request.
    * @throws {ForbiddenException} If user doesn't have 'edit' permission on parent.
    */
-  validAddPermission(
-    createNavigationDto: CreateNavigationDto,
-    userNavigationPermissions: NavigationPermissions
+  async validAddPermission(
+    parentGroupId: string,
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === createNavigationDto.parentGroupId && obj.permissionName.includes('edit')
-      )
-    ) {
+    const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+      userNavigationPermissions,
+      parentGroupId,
+      'edit'
+    );
+  
+    if (!hasUserPermission) {
       throw new ForbiddenException();
     }
   }
@@ -51,7 +52,7 @@ export class NavigationValidatorService {
   async validEditPermission(
     id: string,
     updateNavigationDto: UpdateNavigationDto,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const dbNavigation = await this._navigationRepository.findOne({
       where: { id: id }
@@ -66,17 +67,25 @@ export class NavigationValidatorService {
 
     if (
       !userNavigationPermissions.find(
-        obj => obj.navigationGroupId === dbNavigation.groupId && obj.permissionName.includes('edit')
+        obj => obj.navigationGroupId === dbNavigation.groupId 
+        && obj.permission.name.includes('edit')
+      ) &&
+      !userNavigationPermissions.find(
+        obj => dbNavigation.ancestorGroupIds.includes(obj.navigationGroupId)
+        && obj.permission.name.includes('edit')
       )
     ) {
       throw new ForbiddenException();
     }
 
     if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
-      if (
-        !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === updateNavigationDto.parentGroupId && obj.permissionName.includes('edit')
-      )) {
+      const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+        userNavigationPermissions,
+        updateNavigationDto.parentGroupId!,
+        'edit'
+      );
+
+      if (!hasUserPermission) {
         throw new ForbiddenException();
       }
     }
@@ -84,27 +93,6 @@ export class NavigationValidatorService {
     return dbNavigation;
   }
 
-  /**
-   * Valid permission to edit array of navigation.
-   * 
-   * @param navigations The array of navigation to update.
-   * @param userNavigationPermissions The user navigation permissions from request.
-   * @throws {ForbiddenException} If user doesn't have edit permission on one of the navigations.
-   */
-  validEditPermissionOnArrayOfNavigations(
-    navigations: Array<Navigation>,
-    userNavigationPermissions: NavigationPermissions
-  ) {
-    navigations.forEach(navigation => {
-      if (
-        !userNavigationPermissions.find(obj =>
-          obj.navigationGroupId === navigation.groupId && obj.permissionName.includes('edit')
-        )
-      ) {
-        throw new ForbiddenException();
-      }
-    });
-  }
 
   /**
    * Valid permission to delete navigation.
@@ -114,20 +102,22 @@ export class NavigationValidatorService {
    * @throws {ForbiddenException} If user doesn't have delete permission on navigation 
    * @throws {BadRequestException} If navigation is global navigation.
    */
-  validDeletePermission(
+  async validDeletePermission(
     navigation: Navigation,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === navigation.groupId && obj.permissionName.includes('delete')
-      )
-    ) {
-      throw new ForbiddenException();
-    }
-
     if (navigation.name === 'global') {
       throw new BadRequestException('Global navigation cannot be deleted.');
+    }
+
+    const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+      userNavigationPermissions,
+      navigation.groupId,
+      'delete'
+    );
+
+    if (!hasUserPermission) {
+      throw new ForbiddenException();
     }
   }
 
@@ -275,17 +265,124 @@ export class NavigationValidatorService {
    * @param navigationGroupId The navigation group id to publish.
    * @param userNavigationPermissions The user's navigation permissions.
    */
-  validPublishPermission(
+  async validPublishPermission(
     navigationGroupId: string,
-    userNavigationPermissions: NavigationPermissions
+    userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
+    const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
+      userNavigationPermissions,
+      navigationGroupId,
+      'edit'
+    );
+
+    if (!hasUserPermission) {
+      throw new ForbiddenException();
+    }
+  }
+
+  /**
+   * Valid user permission for specific action by navigation group Id.
+   * 
+   * 1. Check if user has permission on the navigation.
+   * 2. If not, check if user has permission on the ancestor of the navigation.
+   * 
+   * @param userNavigationPermissions The user navigation permissions.
+   * @param navigationGroupId The navigation group id to check.
+   * @param action The action.
+   * @returns True if user has permission, false if not.
+   * @throws {BadRequestException} If navigation group id is null or undefined.
+   */
+  async validUserPermissionByNavigationGroupId(
+    userNavigationPermissions: Array<RoleNavigationPermission>,
+    navigationGroupId: string,
+    action: string
+  ) {
+    if (!navigationGroupId) {
+      throw new BadRequestException(`Navigation group id is undefined.`);
+    }
+    /* 1. */
     if (
-      !userNavigationPermissions.find(obj => 
-        obj.navigationGroupId === navigationGroupId && obj.permissionName.includes('edit')
+      userNavigationPermissions.find(
+        obj => obj.navigationGroupId === navigationGroupId
+        && obj.permission.name.includes(action)
       )
     ) {
-      throw new ForbiddenException(`You don't have permission to publish navigation with groupId ${navigationGroupId}`);
+      return true;
     }
+
+    /* 2. */
+    const navigation = await this._navigationRepository.findOne({
+      where: {
+        deletedDate: IsNull(),
+        groupId: navigationGroupId,
+      }
+    });
+
+    if (!navigation) {
+      throw new NotFoundException(`Navigation with group id ${navigationGroupId} not found.`)
+    }
+
+    if (
+      userNavigationPermissions.find(
+        obj => navigation.ancestorGroupIds?.includes(obj.navigationGroupId)
+        && obj.permission.name.includes(action)
+      )
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Valid if user has permission on a navigation associated to given navigation type.
+   * 
+   * If user navigation permissions already include this navigation type return true
+   * otherwise find in database all navigations for this type and compare their ancestor with user role navigation permissions.
+   * 
+   * @param navigationTypeName The navigation type name to validate.
+   * @param userNavigationPermissions The user navigation permissions.
+   * @param action The action.
+   * @returns True or false.
+   */
+  async validUserPermissionByNavigationType(
+    navigationTypeNames: Array<string>,
+    userNavigationPermissions: Array<RoleNavigationPermission>,
+    action: string
+  ) {
+    if (
+      userNavigationPermissions.find(obj => 
+        navigationTypeNames.includes(obj.navigation.navigationType.name)
+        && obj.permission.name.includes(action)
+      )
+    ) {
+      return true;
+    }
+
+    const navigations = await this._navigationRepository.find({
+      relations: ['navigationType'],
+      where: {
+        deletedDate: IsNull(),
+        navigationType: {
+          name: In(navigationTypeNames)
+        }
+      }
+    });
+
+    for (const navigation of navigations) {
+      for (const ancestorGroupId of navigation.ancestorGroupIds) {
+        if (
+          userNavigationPermissions.find(obj => 
+            obj.navigationGroupId === ancestorGroupId
+            && obj.permission.name.includes(action)
+          )
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
 }

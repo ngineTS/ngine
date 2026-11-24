@@ -3,17 +3,15 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { In, IsNull, Repository } from 'typeorm';
-import { User } from '../user/entities/user.entity';
+import { ArrayContains, ArrayOverlap, In, IsNull, Repository } from 'typeorm';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
-import { AuthService } from 'src/core/auth/auth.service';
 import { MenuService } from '../menu/menu.service';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
-import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 import { ContainerStyleService } from '../container-style/container-style.service';
 import { TypographyStyleService } from '../typography-style/typography-style.service';
 import { ContainerLayoutService } from '../container-layout/container-layout.service';
 import { v4 as uuidv4 } from 'uuid';
+import { Permission } from '../permission/entities/permission.entity';
 
 @Injectable()
 export class NavigationService {
@@ -23,11 +21,8 @@ export class NavigationService {
     private _navigationRepository: Repository<Navigation>,
     @InjectRepository(NavigationType)
     private _navigationTypeRepository: Repository<NavigationType>,
-    @InjectRepository(User)
-    private _userRepository: Repository<User>,
     @InjectRepository(RoleNavigationPermission)
     private _roleNavigationPermissionRepository: Repository<RoleNavigationPermission>,
-    private _authService: AuthService,
     @Inject(forwardRef(() => MenuService))
     private _menuService: MenuService,
     @Inject(forwardRef(() => ContainerLayoutService))
@@ -42,17 +37,24 @@ export class NavigationService {
    * @param userNavigationPermissions The user navigation permissions from request.
    * @returns The array of navigations.
    */
-  async findAllNavigations(userNavigationPermissions: NavigationPermissions) {
+  async findAllNavigations(userNavigationPermissions: Array<RoleNavigationPermission>) {
     const userNavigationGroupIds = userNavigationPermissions.map<string>(
-      userNavigationPermission => userNavigationPermission.navigationGroupId
+      roleNavigationPermission => roleNavigationPermission.navigationGroupId
     );
 
     return await this._navigationRepository.find({
-      where: { 
-        groupId: In(userNavigationGroupIds),
-        isDraft: true,
-        deletedDate: IsNull()
-      },
+      where: [
+        {
+          groupId: In(userNavigationGroupIds),
+          isDraft: true,
+          deletedDate: IsNull()
+        },
+        {
+          ancestorGroupIds: ArrayOverlap(userNavigationGroupIds),
+          isDraft: true,
+          deletedDate: IsNull()
+        }
+      ],
       relations: ['navigationType', 'parent'],
       order: { displayLabel: 'ASC' }
     });
@@ -61,41 +63,17 @@ export class NavigationService {
   /**
    * Load nested navigations with permissions.
    * 
-   * Process:
-   * 1. Load user navigation permissions.
-   * 2. Initialize root and load all levels.
-   * 3. Cleanup invalid nodes and setup user navigation permissions for request token.
-   * 4. Create auth token with user navigation permissions.
-   * 
-   * @param userId The user id from the request.
-   * @param userEmail The user email from the request.
-   * @param maxDepth The maximum depth to load.
-   * @returns Nested navigation tree with permissions and optional access token.
+   * @param userRoleNavigationPermissions The user role navigation permissions from request token.
+   * @returns Nested navigation tree with permissions setup on each node.
+   * @throws {BadRequestException} if user has no permission on any navigation.
    */
   async loadNestedNavigations(
-    userId: string,
-    userEmail: string,
-    maxDepth: number
+    userRoleNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    // 1. Load root user permissions
-    const userRoleNavigationPermissionsFormatted = await this.getUserRoleNavigationPermissionsFormatted(userId);
-
-    // 2. Initialize root and load all levels
-    const root = await this.loadRootNavigation(userRoleNavigationPermissionsFormatted);
-    await this.loadNavigationLevels(root, maxDepth, userRoleNavigationPermissionsFormatted);
-
-    // 3. Cleanup invalid nodes and collect permissions in a single pass
-    const userNavigationPermissions = this.cleanupAndCollectPermissions(root);
-
-    // 4. Create auth token with user navigation permissions.
-    const payload = {
-      sub: userId,
-      userEmail: userEmail,
-      userNavigationPermissions: userNavigationPermissions
-    };
-    const accessToken = await this._authService.getAccessToken(payload);
+    const { root, rootPermission } = await this.loadRootNavigation(userRoleNavigationPermissions);
+    root.children = await this.loadNavigationChildren(root, rootPermission, userRoleNavigationPermissions);
     
-    return { navigation: root, access_token: accessToken };
+    return root;
   }
 
   /**
@@ -103,12 +81,15 @@ export class NavigationService {
    * 
    * If user has edit permission on root then load 'draft' root record else load 'publish' root record.
    * 
-   * @returns The root navigation entity.
+   * @returns The root navigation and its permission.
    * @throws {BadRequestException} If root navigation is not found.
    */
   private async loadRootNavigation(
-    userRoleNavigationPermissions: RoleNavigationPermission[]
-  ): Promise<Navigation> {
+    userRoleNavigationPermissions: Array<RoleNavigationPermission>
+  ): Promise<{
+    root: Navigation,
+    rootPermission: Permission | undefined
+  }> {
     const rootGroupId = '00000000-0000-0000-0000-000000000000';
     const rootPublishRecordId = '00000000-0000-0000-0000-000000000000';
     const rootDraftRecordId = '11111111-1111-1111-1111-111111111111';
@@ -137,296 +118,136 @@ export class NavigationService {
     if (rootPermission) {
       root['permissionName'] = rootPermission.name;
     }
-    root['level'] = 0;
-    root.children = [];
-
-    return root;
+    
+    return { root, rootPermission };
   }
 
   /**
-   * Load navigations level-by-level with on-the-fly permission setup.
+   * Load navigation levels
    * 
-   * Until depth or no more navigations:
-   * 1. Load next level of navigations.
-   * 2. Setup permissions on next level of navigations.
-   * 3. Assign next level as children of current level navigations.
-   * 
-   * @param root The root navigation.
-   * @param maxDepth Maximum depth to load.
-   * @param userRoleNavigationPermissions User's role navigation permissions.
+   * @param navigation The parent navigation.
+   * @param navigationPermission The parent navigation permission.
+   * @param userRoleNavigationPermissions The user role navigations permissions from request token.
+   * @returns 
    */
-  private async loadNavigationLevels(
-    root: Navigation,
-    maxDepth: number,
-    userRoleNavigationPermissions: RoleNavigationPermission[]
+  async loadNavigationChildren(
+    navigation: Navigation,
+    navigationPermission: Permission | undefined,
+    userRoleNavigationPermissions: Array<RoleNavigationPermission>,
   ) {
-    let currentLevel = [root];
-
-    for (let depth = 0; depth < maxDepth; depth++) {
-      if (currentLevel.length === 0) break;
-
-      // 1. Load next level of navigations
-      const parentGroupIds = currentLevel.map(n => n.groupId);
-      const nextLevel = await this._navigationRepository.find({
-        where: { 
-          parentGroupId: In(parentGroupIds),
-          deletedDate: IsNull()
-        },
-        relations: [
-          'navigationType',
-          'containerLayout',
-          'containerStyle',
-          'typographyStyle',
-          'menu',
-          'menu.containerLayout',
-          'menu.containerStyle',
-          'menu.typographyStyle'
-        ]
-      });
-
-      if (nextLevel.length === 0) break;
-
-      // 2. Setup permissions on next level of navigations and build Record<parentGroupId, children>.
-      const childrenMap = this.buildChildrenMapWithPermissions(
-        nextLevel,
-        currentLevel,
-        userRoleNavigationPermissions,
-        depth
-      );
-
-      // 3. Assign next level to children of current level navigations.
-      currentLevel.forEach(parent => {
-        parent['level'] = depth;
-        parent.children = childrenMap[parent.groupId] || [];
-      });
-
-      currentLevel = nextLevel;
-    }
-  }
-
-  /**
-   * Build children map with permission setup.
-   * 
-   * 1. Get parent's permission for inheritance.
-   * 2. Setup permission for this navigation following the 4 permission cases.
-   * 3. if view permission then keep 'publish' record only, if edit permission then keep 'draft' record only.
-   * 
-   * @param nextLevel Nodes to process.
-   * @param currentLevel Parent nodes. Needed to get parent permissions.
-   * @param userRoleNavigationPermissions User's role navigation permissions.
-   * @returns Map of parent IDs to their children.
-   */
-  private buildChildrenMapWithPermissions(
-    nextLevel: Navigation[],
-    currentLevel: Navigation[],
-    userRoleNavigationPermissions: RoleNavigationPermission[],
-    depth
-  ): Record<string, Navigation[]> {
-    return nextLevel.reduce((acc, node) => {
-      node.children = [];
-      node['level'] = depth + 1;
-      // 1. Get parent's permission for inheritance 
-      const parent = currentLevel.find(p => p.groupId === node.parentGroupId);
-      const parentPermission = parent?.['permissionName'];
-
-      // 2. Setup permission for this node
-      this.setupNodePermissions(node, parentPermission, userRoleNavigationPermissions);
-
-      acc[node.parentGroupId] = acc[node.parentGroupId] || [];
-
-      //3. Keep only 'draft' or 'publish' record
-      if (
-        (node['permissionName']?.includes('edit') && node.isDraft) ||
-        (!node['permissionName']?.includes('edit') && !node.isDraft)
-      ) {
-        acc[node.parentGroupId].push(node);
-      }
-
-      return acc;
-    }, {});
-  }
-
-  /**
-   * Assign permission name to a single node following the 4 permission inheritance cases.
-   * 
-   * Cases:
-   * - Case 1: Node permission higher than parent → keep node permission
-   * - Case 2: Node permission lower than parent → inherit parent permission
-   * - Case 3: Node has permission, parent doesn't → keep node permission
-   * - Case 4: Node has no permission, parent does → inherit parent permission
-   * 
-   * @param node The navigation node to setup permissions for.
-   * @param parentPermission The parent's permission name (if any).
-   * @param userRoleNavigationPermissions User's role navigation permissions.
-   */
-  private setupNodePermissions(
-    node: Navigation,
-    parentPermission: string | undefined,
-    userRoleNavigationPermissions: RoleNavigationPermission[]
-  ): void {
-    let nodePermission = userRoleNavigationPermissions.find(
-      obj => obj.navigationGroupId === node.groupId
-    )?.permission;
-
-    if (nodePermission) {
-      const parentPermissionObj = parentPermission
-        ? userRoleNavigationPermissions.find(rnp => rnp.permission.name === parentPermission)?.permission
-        : undefined;
-
-      if (parentPermissionObj) {
-        // Case 1: Node has permission and it's higher than parent
-        if (nodePermission.priority < parentPermissionObj.priority) {
-          node['permissionName'] = nodePermission.name;
-        }
-        // Case 2: Node has permission but parent permission is higher
-        else {
-          node['permissionName'] = parentPermissionObj.name;
-          nodePermission = parentPermissionObj;
-        }
-      }
-      // Case 3: Node has permission and parent has none
-      else {
-        node['permissionName'] = nodePermission.name;
-      }
-    }
-    // Case 4: Node has no permission but parent does
-    else {
-      if (parentPermission) {
-        node['permissionName'] = parentPermission;
-      }
-    }
-  }
-
-  /**
-   * Iteratively cleanup invalid navigations and collect permissions at the same time.
-   * 
-   * Removes nodes that have no valid permissions an no children with valid permissions.
-   * Collects all valid nodes with permissions for token payload.
-   * 
-   * @param root The root navigation.
-   * @returns Array of navigation permissions for valid nodes.
-   */
-  private cleanupAndCollectPermissions(root: Navigation): NavigationPermissions {
-    const userNavigationPermissions: NavigationPermissions = [];
-
-    const isViewOnlyAndDisabled = (node: Navigation): boolean => {
-      return !node['permissionName']?.includes('edit') && node.isDisabled;
-    };
-
-    // Post-order prune: keep node if it has a valid permission or any descendant does.
-    const prune = (node: Navigation): boolean => {
-      if (!node) return false;
-      if (!node.children) node.children = [];
-
-      // Recurse into children first
-      node.children = node.children.filter(child => prune(child));
-
-      // Collect permission only if it's a valid permission (not view-only disabled)
-      const hasOwnValidPermission = !!node['permissionName'] && !isViewOnlyAndDisabled(node);
-      if (hasOwnValidPermission) {
-        userNavigationPermissions.push({
-          navigationGroupId: node.groupId,
-          permissionName: node['permissionName'],
-          navigationTypeName: node.navigationType?.name
-        });
-      }
-
-      // Node is kept if it has a valid permission or any child was kept
-      return hasOwnValidPermission || node.children.length > 0;
-    };
-
-    prune(root);
-
-    return userNavigationPermissions;
-  }
-
-  /**
-   * Format user roleNavigationPermissions.
-   * 
-   * If a user is assigned to multiple roles which share the same navigations
-   * then we keep only the navigations with highest priviledge.
-   * 
-   * TODO: Rework to something more fluent and performant.
-   * 
-   * @param userId the id of the user.
-   * @returns The distinct role navigation permissions associated to the user.
-   */
-  async getUserRoleNavigationPermissionsFormatted(userId: string): Promise<Array<RoleNavigationPermission>> {
-    /* get user roles */
-    const userWithRoles = await this._userRepository.findOne({
-      relations: [
-        'userRoles',
-        'userRoles.role',
-        'userRoles.role.roleNavigationPermissions',
-        'userRoles.role.roleNavigationPermissions.navigation',
-        'userRoles.role.roleNavigationPermissions.permission',
-      ],
+    let children = await this._navigationRepository.find({
       where: {
-        id: userId,
         deletedDate: IsNull(),
+        parentGroupId: navigation.groupId
+      },
+      relations: [
+        'navigationType',
+        'containerLayout',
+        'containerStyle',
+        'typographyStyle',
+        'menu',
+        'menu.containerLayout',
+        'menu.containerStyle',
+        'menu.typographyStyle'
+      ]
+    });
+
+    for (const child of children) {
+      let hasUserPermissionOnDescendant = true;
+
+      let childPermission = userRoleNavigationPermissions.find(rnp => 
+        rnp.navigationGroupId === child.groupId
+      )?.permission;
+
+      if (childPermission && navigationPermission) {
+        // Case 1: child permission higher than parent one -> keep child permission
+        if (childPermission.priority < navigationPermission.priority) {
+          child['permissionName'] = childPermission.name;
+        }
+        // Case 2: parent permission higher than child one -> inherit parent permission
+        else {
+          child['permissionName'] = navigationPermission.name;
+          childPermission = navigationPermission;
+        }
+      }
+      // Case 3: child permission not found but parent yes -> inherit parent permission
+      else if (navigationPermission) {
+        child['permissionName'] = navigationPermission.name;
+        childPermission = navigationPermission;
+      }
+      // Case 4: parent permission not found but child yes -> keep child permission
+      else if (childPermission) {
+        child['permissionName'] = childPermission.name;
+      }
+      // Case 5: child and parent permissions not found -> check if user has access to one of the descendants
+      else {
+        hasUserPermissionOnDescendant = await this.hasUserPermissionOnDescendant(child, userRoleNavigationPermissions);
+      }
+
+      if (hasUserPermissionOnDescendant) {
+        child.children = await this.loadNavigationChildren(child, childPermission, userRoleNavigationPermissions);
+      }
+    }
+    
+    children = children.filter(child => {
+      const permission = child['permissionName'];
+      const hasEditPermission = permission?.includes('edit') ?? false;
+      return (
+        ((hasEditPermission && child.isDraft) || (!hasEditPermission && !child.isDraft)) &&
+        (!child.isDisabled || hasEditPermission) && (permission || child.children)
+      );
+    });
+
+    return children;
+  }
+
+  /**
+   * Check if user has access to one of the descendants of a given navigation.
+   * 
+   * @param navigation The navigation to check the descendants
+   * @param userNavigationPermissions The array of user navigation permissions.
+   * @returns A promise of true or false.
+   */
+  async hasUserPermissionOnDescendant(
+    navigation: Navigation,
+    userNavigationPermissions: Array<RoleNavigationPermission>
+  ): Promise<boolean> {
+    const descendants = await this._navigationRepository.find({
+      where: {
+        deletedDate: IsNull(),
+        ancestorGroupIds: ArrayContains([navigation.groupId])
       }
     });
-    /* exclude deleted user roles */
-    if (userWithRoles) {
-      userWithRoles.userRoles = userWithRoles.userRoles
-        .filter(obj => !obj.deletedDate && !obj.role.deletedDate);
-    }
-    /* exclude deleted user role navigation permissions */
-    userWithRoles?.userRoles.forEach(userRole => {
-      userRole.role.roleNavigationPermissions = userRole.role.roleNavigationPermissions
-        .filter(obj => !obj.deletedDate && !obj.navigation?.deletedDate && !obj.permission.deletedDate);
-    })
-    /* retrieve userRoleNavigationPermissions only */
-    const userRoleNavigationPermissions: RoleNavigationPermission[] = [];
-    userWithRoles?.userRoles.forEach(userRole => {
-      userRole.role.roleNavigationPermissions.forEach(rnp => userRoleNavigationPermissions.push(rnp));
-    })
-    /* group roleNavigationPermissions by navigationId */
-    const userRoleNavigationPermissionsByNavigationId = userRoleNavigationPermissions.reduce((acc, item) => {
-      (acc[item.navigationGroupId] ||= []).push(item);
-      return acc;
-    }, {});
-    /* if multiple roleNavigationPermissions by navigationId then keep only the one with highest permission */
-    const priorityUserRoleNavigationPermissionByNavigationId = Object.fromEntries(
-      Object.entries<RoleNavigationPermission[]>(userRoleNavigationPermissionsByNavigationId)
-        .map(([id, items]) => {
-          const lowest = items.reduce((min, item) =>
-            item.permission.priority < min.permission.priority ? item : min
-          );
-          return [id, lowest];
-        })
-    );
-    /* create final array of user roleNavigationPermissions */
-    const userRoleNavigationPermissionsFormatted: RoleNavigationPermission[] = [];
-     for (const [key, value] of Object.entries(priorityUserRoleNavigationPermissionByNavigationId)) {
-      userRoleNavigationPermissionsFormatted.push(value);
-    }
-    return userRoleNavigationPermissionsFormatted;
-  }
 
+    for (const descendant of descendants) {
+      if (userNavigationPermissions.find(rnp => rnp.navigationGroupId === descendant.groupId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   /**
    * Save navigation with default style.
    * 
-   * 1. Add draft and audit data and save navigation.
+   * 1. Add draft and audit data, generate ancestor group ids and save navigation.
    * 2. Assign style properties.
    * 3. If navigation is a menu button then create menu and assign style properties.
-   * 4. Add navigation saved to the user navigation permissions and generate new token.
+   * 4. Assign permission and return navigation saved.
    * 
    * @param createNavigationDto The navigation to save.
    * @param parentNavigation The parent navigation.
    * @param userId The user id from request.
-   * @parem yPos The y position for the new navigation (optional).
+   * @param yPos The y position for the new navigation (optional).
    * @returns The navigation saved.
    */
   async saveNavigation(
     createNavigationDto: CreateNavigationDto,
     parentNavigation: Navigation,
     yPos: number | undefined,
-    userId: string,
-    userEmail: string,
-    userNavigationPermissions: NavigationPermissions
-  ): Promise<{ navigation: Navigation, access_token: string }> {
+    userId: string
+  ): Promise<Navigation> {
     /* 1 */
     createNavigationDto['isDraft'] = true;
     createNavigationDto['groupId'] = uuidv4();
@@ -446,6 +267,10 @@ export class NavigationService {
     if (navigationType.name === 'menu-button') {
       createNavigationDto['unpublishedChanges'].push('menu');
     }
+
+    const ancestorGroupIds = await this.generateAncestorGroupIds(parentNavigation.groupId);
+    createNavigationDto['ancestorGroupIds'] = ancestorGroupIds;
+
     const navigationSaved = await this._navigationRepository.save(createNavigationDto);
 
     /* 2. */
@@ -469,26 +294,9 @@ export class NavigationService {
     }
 
     /* 4. */
-    const parentPermission = userNavigationPermissions.find(
-      obj => obj.navigationGroupId === navigationSaved.parentGroupId
-    );
-    const updatedPermissions = [
-      ...userNavigationPermissions,
-      {
-        navigationGroupId: navigationSaved.groupId,
-        permissionName: parentPermission!.permissionName,
-        navigationTypeName: navigationType.name,
-      },
-    ];
-    navigationSaved['permissionName'] = parentPermission!.permissionName;
+    navigationSaved['permissionName'] = 'Can view, edit and delete';
 
-    const accessToken = await this._authService.getAccessToken({
-      sub: userId,
-      userEmail,
-      userNavigationPermissions: updatedPermissions,
-    });
-
-    return { navigation: navigationSaved, access_token: accessToken };
+    return navigationSaved;
   }
 
   /**
@@ -497,7 +305,8 @@ export class NavigationService {
    * 1. Get existing navigation from db.
    * 2. Push properties to 'unpublishedChanges' keeping uniqueness
    * 3. If parent has changed and old parent has no more children then delete his menu.
-   * 4. Add audit data and update navigation.
+   * 4. If parent has changed then update ancestorGroupIds for navigation and all descendants.
+   * 5. Add audit data and update navigation.
    * 
    * @param id The navigation id.
    * @param updateNavigationDto The navigation properties to update.
@@ -523,8 +332,10 @@ export class NavigationService {
     setOfKeys.add('navigation');
     updateNavigationDto['unpublishedChanges'] = [...setOfKeys];
     
-    /* 3. */
     if ('parentGroupId' in updateNavigationDto && updateNavigationDto.parentGroupId !== dbNavigation.parentGroupId) {
+      updateNavigationDto['unpublishedChanges'].push('parent');
+      
+      /* 3. */
       const oldParentNavigation = await this._navigationRepository.findOne({
         relations: ['children', 'menu'],
         where: { 
@@ -532,15 +343,21 @@ export class NavigationService {
           deletedDate: IsNull(),
         },
       });
+
       if (oldParentNavigation?.menu && oldParentNavigation?.children?.filter(obj => !obj.deletedDate).length === 1) {
         await this._menuService.remove(oldParentNavigation.menu.id);
         await this._containerLayoutService.deleteByRefId(oldParentNavigation.menu.id);
         await this._containerStyleService.deleteByRefId(oldParentNavigation.menu.id);
         await this._typographyStyleService.deleteByRefId(oldParentNavigation.menu.id);
       }
+
+      /* 4. */
+      const ancestorGroupIds = await this.generateAncestorGroupIds(updateNavigationDto.parentGroupId!);
+      updateNavigationDto['ancestorGroupIds'] = ancestorGroupIds;
+      await this.updateDescendantAncestorGroupIds(dbNavigation, ancestorGroupIds);
     }
 
-    /* 4. */
+    /* 5. */
     updateNavigationDto["updatedBy"] = userId;
     updateNavigationDto["updatedDate"] = new Date();
     return await this._navigationRepository.update(id, updateNavigationDto);
@@ -792,6 +609,10 @@ export class NavigationService {
             await this._containerStyleService.updateByRefId(navigationPublishedRecord.menu.id, containerStylePropertiesToUpdate);
           }
         }
+
+        if (relation === 'parent') {
+          await this.copyDescendantAncestorIds(navigationGroupId, 'publish');
+        }
       }
 
       let {
@@ -915,6 +736,10 @@ export class NavigationService {
         const { id: __, refId: _r2, ...containerStylePropertiesToUpdate } = navigationPublishedRecord.menu.containerStyle;
         await this._containerStyleService.updateByRefId(navigationDraftRecord.menu.id, containerStylePropertiesToUpdate);
       }
+
+      if (relation === 'parent') {
+        await this.copyDescendantAncestorIds(navigationGroupId, 'cancel');
+      }
     }
 
     /* 3. */
@@ -944,7 +769,7 @@ export class NavigationService {
   /**
    * Get navigations where navigation type is redirect-button only.
    * 
-   * @returns A promise of an array of navigations.
+   * @returns A promise of an array of redirect button navigations.
    */
   getRedirectButtons() {
     return this._navigationRepository.find({
@@ -961,5 +786,126 @@ export class NavigationService {
       }
     })
   }
-  
+
+  /**
+   * Generate the list of ancestor group ids for a given parent group id.
+   * 
+   * @param parentGroupId The group id of the parent.
+   * @returns A promise of array of ancestor group ids.
+   */
+  async generateAncestorGroupIds(parentGroupId: string): Promise<Array<string>> {
+    const navigation = await this._navigationRepository.findOne({
+      select: { ancestorGroupIds: true },
+      where: {
+        groupId: parentGroupId,
+        isDraft: true,
+        deletedDate: IsNull()
+      }
+    });
+
+    if (!navigation) {
+      throw new NotFoundException(
+        `Draft navigation with groupId ${parentGroupId} not found.`
+      );
+    }
+
+    return [...navigation.ancestorGroupIds, parentGroupId];
+  }
+
+  /**
+   * Update the ancestor group ids for all descendants of a navigation when its parent changes.
+   * 
+   * 1. Retrieve all descendants (draft) of the navigation provided.
+   * 2. Remove the old ancestor group ids from each descendant's ancestorGroupIds.
+   * 3. Add the new ancestor group ids to each descendant's ancestorGroupIds.
+   * 4. Save the updated descendants back to the database.
+   * 
+   * @param navigation The navigation which parent will change.
+   * @param newAncestorGroupIds The new list of ancestorGroupsIds for the navigation provided.
+   */
+  async updateDescendantAncestorGroupIds(
+    navigation: Navigation,
+    newAncestorGroupIds: Array<string>
+  ) {
+    /* 1. */
+    const oldAncestorGroupIds = navigation.ancestorGroupIds;
+    const draftDescendants = await this._navigationRepository.find({
+      where: {
+        ancestorGroupIds: ArrayContains([navigation.groupId]),
+        isDraft: true,
+        deletedDate: IsNull()
+      }
+    });
+
+    draftDescendants.forEach(descendant => {
+      /* 2. */
+      descendant.ancestorGroupIds = descendant.ancestorGroupIds.filter(
+        groupId => !oldAncestorGroupIds.includes(groupId)
+      );
+      /* 3. */
+      descendant.ancestorGroupIds.push(...newAncestorGroupIds);
+    });
+
+    /* 4. */
+    await this._navigationRepository.save(draftDescendants);
+  }
+
+
+  /**
+   * 
+   * Copy the ancestor group ids from the draft navigation records
+   * to the published navigation records for a given navigation group id.
+   * 
+   * @param navigationGroupId The navigation group id used to find descendants.
+   * @param type The type of operation to perform.
+   */
+  async copyDescendantAncestorIds(navigationGroupId: string, type: 'cancel' | 'publish') {
+    const draftDescendants = await this._navigationRepository.find({
+      where: {
+        ancestorGroupIds: ArrayContains([navigationGroupId]),
+        isDraft: true,
+        deletedDate: IsNull()
+      }
+    });
+
+    if (draftDescendants.length === 0) {
+      return;
+    }
+
+    const publishDescendants = await this._navigationRepository.find({
+      where: {
+        ancestorGroupIds: ArrayContains([navigationGroupId]),
+        isDraft: false,
+        deletedDate: IsNull()
+      }
+    });
+
+    const descendantsToUpdateByGroupId = new Map<string, Navigation>();
+    if (type === 'cancel') {
+      draftDescendants.forEach(descendant =>
+        descendantsToUpdateByGroupId.set(descendant.groupId, descendant)
+      );
+    }
+    else {
+      publishDescendants.forEach(descendant =>
+        descendantsToUpdateByGroupId.set(descendant.groupId, descendant)
+      );
+    }
+
+    const descendantsToCopy = type === 'cancel' ? publishDescendants : draftDescendants;
+    const descendantsToUpdate = descendantsToCopy.map(obj => {
+      const descendant = descendantsToUpdateByGroupId.get(obj.groupId);
+      if (!descendant) {
+        throw new NotFoundException(
+          `Published navigation with groupId ${obj.groupId} not found.`
+        );
+      }
+
+      descendant.ancestorGroupIds = [...obj.ancestorGroupIds];
+      return descendant;
+    });
+
+    await this._navigationRepository.save(descendantsToUpdate);
+  }
+
 }

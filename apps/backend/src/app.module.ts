@@ -15,8 +15,6 @@ import { Calendar } from './domains/calendar/entities/calendar.entity';
 import { Media } from './domains/media/entities/media.entity';
 import { FileManagementModule } from './domains/file-management/file-management.module';
 import { MediaModule } from './domains/media/media.module';
-import { TableViz } from './domains/table-viz/entities/table-viz.entity';
-import { TableVizModule } from './domains/table-viz/table-viz.module';
 import { CustomTableModule } from './domains/custom-table/custom-table.module';
 import { User } from './domains/user/entities/user.entity';
 import { PasswordRecovery } from './core/password-recovery/entities/password-recovery.entity';
@@ -49,6 +47,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { StripePaymentModule } from './domains/stripe-payment/stripe-payment.module';
 import { BannerModule } from './domains/banner/banner.module';
 import { Banner } from './domains/banner/entities/banner.entity';
+import { RoleGuardModule } from './core/guards/role-guard.module';
 
 
 
@@ -82,7 +81,6 @@ import { Banner } from './domains/banner/entities/banner.entity';
         QuillEditor,
         Calendar,
         Media,
-        TableViz,
         User,
         PasswordRecovery,
         Role,
@@ -102,7 +100,7 @@ import { Banner } from './domains/banner/entities/banner.entity';
       {
         name: 'short',
         ttl: 1000, // 1 second
-        limit: 5,  // 5 requests per second
+        limit: 8,  // 8 requests per second
       },
       {
         name: 'medium',
@@ -115,13 +113,13 @@ import { Banner } from './domains/banner/entities/banner.entity';
         limit: 100,
       },
     ]),
+    RoleGuardModule,
     NavigationModule,
     NavigationTypeModule,
     QuillEditorModule,
     CalendarModule,
     FileManagementModule,
     MediaModule,
-    TableVizModule,
     CustomTableModule,
     AuthModule,
     UserModule,
