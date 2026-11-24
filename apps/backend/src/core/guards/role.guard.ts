@@ -69,7 +69,7 @@ export class RolesGuard implements CanActivate {
           }
         }
         /* if table not aggregated by navigationId then check for navigation type only */
-        this._navigationValidatorService.validUserPermissionByNavigationType(
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
           navigationTypeNameArray,
           user.userNavigationPermissions,
           'view'
@@ -91,7 +91,7 @@ export class RolesGuard implements CanActivate {
           }
         }
         /* if table not aggregated by navigationId then check for navigationType only */
-        this._navigationValidatorService.validUserPermissionByNavigationType(
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
           navigationTypeNameArray,
           user.userNavigationPermissions,
           'edit'
@@ -107,7 +107,7 @@ export class RolesGuard implements CanActivate {
           );
         }
         /* if table not aggregated by navigationId then check for navigationType only */
-        this._navigationValidatorService.validUserPermissionByNavigationType(
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
           navigationTypeNameArray,
           user.userNavigationPermissions,
           'edit'
@@ -137,14 +137,12 @@ export class RolesGuard implements CanActivate {
           );
         }
         /* if table not aggregated by navigationId then check for navigationType only */
-        this._navigationValidatorService.validUserPermissionByNavigationType(
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
           navigationTypeNameArray,
           user.userNavigationPermissions,
           'delete'
         );
     }
-
-    return false;
   }
 
   /**
