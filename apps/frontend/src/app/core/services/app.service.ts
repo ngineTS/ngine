@@ -194,7 +194,6 @@ export class AppService {
       .filter(obj => obj.parentGroupId === navigation.groupId);
     
     if (navigation.menu.isVertical) {
-      console.log('redt', redirectButtonNavigationsWithoutOnesInsideMenu);
       return redirectButtonNavigationsWithoutOnesInsideMenu
         .sort((a, b) => a.order - b.order)[0].name;
     }
