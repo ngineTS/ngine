@@ -269,7 +269,6 @@ VALUES ('efb83d84-50e9-4749-9ae9-b695dd47725e', 'dialog-button', 'Dialog Button'
 	('4dcbdfb1-0c02-44f4-ad2f-d71e34631496', 'user-management', 'User Management', 'Manage your users.', 'user-management.png'),
 	('224a2cf9-08a6-4239-8334-a4160d69d14f', 'media-library', 'Media Library', 'Find and manage all the files uploaded.', 'media-library.png'),
 	('7185d7b4-b0b6-4a26-996c-1b52c2099f4a', 'analytic', 'Analytic', 'Find essential metrics related to your aplplication.', 'analytic.png'),
-	('83b9cc4d-c3f4-4ee0-a278-3a44a2289fe5', 'content-visualization', 'Content Visualization', 'Visualize your tables.', 'table-viz.png'),
 	('2028fb3f-1821-4db5-b027-ada0fa39704e', 'calendar', 'Calendar', 'Publish information into a calendar including text, files...', 'calendar.png'),
 	('e7101e0c-93ed-497a-af60-af7974e2d871', 'my-quill-editor', 'Text Editor', 'Text editor to post information.', 'quill-editor.png'),
 	('83b42cac-968a-4e98-865c-bed6dd18a76b', 'sign-container', 'User Authentication', 'Sign-in / Sign-up form', 'sign-container.png'),
