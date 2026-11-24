@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Optional } from '@angular/core';
 import { SignInComponent } from './sign-in/sign-in.component';
 import { SignUpComponent } from './sign-up/sign-up.component';
 import { MatButton } from '@angular/material/button';
@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
 import { User } from '../../core/models/user.interface';
 import { AuthPack } from '../authentication-management/auth-pack.interface';
+import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-sign-container',
@@ -25,7 +26,8 @@ export class SignContainerComponent extends NavigationBaseComponent {
     private _snackbarService: SnackBarService,
     private _appService: AppService,
     private _router: Router,
-    private _userService: UserService
+    private _userService: UserService,
+    @Optional() private _dialogRef: MatDialogRef<SignContainerComponent> | null,
   ) { super(); }
 
   isSignUpTab: boolean = false;
@@ -110,6 +112,7 @@ export class SignContainerComponent extends NavigationBaseComponent {
   async onLogOutClick() {
     localStorage.removeItem('access_token');
     const guestSignInResponse: any = await firstValueFrom(this._authService.guestSignIn());
+    this._dialogRef?.close();
     localStorage.setItem('access_token', guestSignInResponse['access_token']);
     this._appService.createAppRouting(this._router.url);
     this._snackbarService.showSuccessSnackBar('Logout successfuly.');
