@@ -95,6 +95,8 @@ export class MenuService {
       updatedDate: new Date(),
       updatedBy: userId
     }
+    const ancestorGroupIds = await this._navigationService.generateAncestorGroupIds(navigation.groupId);
+    firstAutoCreatedChild['ancestorGroupIds'] = ancestorGroupIds;
     const firstAutoCreatedChildSaved = await this._navigationRepository.save(firstAutoCreatedChild);
     await this._containerLayoutService.createObjectContainerLayout({ refId: firstAutoCreatedChildSaved.id });
     await this._containerStyleService.createObjectDefaultContainerStyle(firstAutoCreatedChildSaved.id);

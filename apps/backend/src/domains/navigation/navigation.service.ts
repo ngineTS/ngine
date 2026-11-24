@@ -3,7 +3,7 @@ import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Navigation } from './entities/navigation.entity';
-import { ArrayContains, In, IsNull, Repository } from 'typeorm';
+import { ArrayContains, ArrayOverlap, In, IsNull, Repository } from 'typeorm';
 import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 import { MenuService } from '../menu/menu.service';
 import { NavigationType } from '../navigation-type/entities/navigation-type.entity';
@@ -43,11 +43,18 @@ export class NavigationService {
     );
 
     return await this._navigationRepository.find({
-      where: { 
-        groupId: In(userNavigationGroupIds),
-        isDraft: true,
-        deletedDate: IsNull()
-      },
+      where: [
+        {
+          groupId: In(userNavigationGroupIds),
+          isDraft: true,
+          deletedDate: IsNull()
+        },
+        {
+          ancestorGroupIds: ArrayOverlap(userNavigationGroupIds),
+          isDraft: true,
+          deletedDate: IsNull()
+        }
+      ],
       relations: ['navigationType', 'parent'],
       order: { displayLabel: 'ASC' }
     });
@@ -243,8 +250,7 @@ export class NavigationService {
     createNavigationDto: CreateNavigationDto,
     parentNavigation: Navigation,
     yPos: number | undefined,
-    userId: string,
-    userNavigationPermissions: Array<RoleNavigationPermission>
+    userId: string
   ): Promise<Navigation> {
     /* 1 */
     createNavigationDto['isDraft'] = true;
@@ -292,10 +298,7 @@ export class NavigationService {
     }
 
     /* 4. */
-    const parentPermission = userNavigationPermissions.find(
-      obj => obj.navigationGroupId === navigationSaved.parentGroupId
-    );
-    navigationSaved['permissionName'] = parentPermission!.permission.name;
+    navigationSaved['permissionName'] = 'Can view, edit and delete';
 
     return navigationSaved;
   }

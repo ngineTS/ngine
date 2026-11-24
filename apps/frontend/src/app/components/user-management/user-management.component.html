@@ -1,12 +1,12 @@
 <div class="user-mngt-container row">
 
-    <mat-form-field class="col-sm-6" appearance="outline">
+    <mat-form-field class="col-sm-6 mb-3" appearance="outline">
         <mat-label>Filter</mat-label>
         <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input>
     </mat-form-field>
 
     @for (user of filteredUsers; track user.id) {
-        <div class="row gap-3 mt-5 align-items-baseline">
+        <div class="row gap-3 mt-4 align-items-baseline">
             <span class="col-md-3 d-flex fw-bold">
                 <i class="bi bi-typescript me-2"></i>
                 {{ user.emailAddress }}
