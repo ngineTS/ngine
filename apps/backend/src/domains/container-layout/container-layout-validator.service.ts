@@ -48,12 +48,10 @@ export class containerLayoutValidatorService {
 
     if (
       !userNavigationPermissions.find(
-        obj => obj.navigationGroupId === navigation.groupId 
-        && obj.permission.name.includes('edit')
-      ) || 
+        obj => obj.navigationGroupId === navigation.groupId && obj.permission.name.includes('edit')
+      ) &&
       !userNavigationPermissions.find(
-        obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId)
-        && obj.permission.name.includes('edit')
+        obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId) && obj.permission.name.includes('edit')
       )
     ) {
       throw new ForbiddenException();

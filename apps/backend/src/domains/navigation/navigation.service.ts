@@ -67,7 +67,7 @@ export class NavigationService {
       throw new BadRequestException('User has no permission on any navigation');
     }
 
-    const {root, rootPermission } = await this.loadRootNavigation(userRoleNavigationPermissions);
+    const { root, rootPermission } = await this.loadRootNavigation(userRoleNavigationPermissions);
     root.children = await this.loadNavigationChildren(root, rootPermission, userRoleNavigationPermissions);
     
     return root;
@@ -150,47 +150,48 @@ export class NavigationService {
     });
 
     for (const child of children) {
-      let hasUserPermissionOnDescendants = true;
+      let hasUserPermissionOnDescendant = true;
 
-      let childPermission = userRoleNavigationPermissions.find(rnp => {
-        rnp.navigationGroupId = child.groupId;
-      })?.permission;
+      let childPermission = userRoleNavigationPermissions.find(rnp => 
+        rnp.navigationGroupId === child.groupId
+      )?.permission;
 
       if (childPermission && navigationPermission) {
         // Case 1: child permission higher than parent one -> keep child permission
         if (childPermission.priority < navigationPermission.priority) {
           child['permissionName'] = childPermission.name;
-          navigationPermission = childPermission;
         }
         // Case 2: parent permission higher than child one -> inherit parent permission
         else {
           child['permissionName'] = navigationPermission.name;
+          childPermission = navigationPermission;
         }
       }
       // Case 3: child permission not found but parent yes -> inherit parent permission
       else if (navigationPermission) {
         child['permissionName'] = navigationPermission.name;
+        childPermission = navigationPermission;
       }
       // Case 4: parent permission not found but child yes -> keep child permission
       else if (childPermission) {
         child['permissionName'] = childPermission.name;
-        navigationPermission = childPermission;
       }
       // Case 5: child and parent permissions not found -> check if user has access to one of the descendants
       else {
-        hasUserPermissionOnDescendants = this.hasUserPermissionOnDescendants(child, userRoleNavigationPermissions);
+        hasUserPermissionOnDescendant = await this.hasUserPermissionOnDescendant(child, userRoleNavigationPermissions);
       }
 
-      if (hasUserPermissionOnDescendants) {
-        child.children = await this.loadNavigationChildren(child, navigationPermission, userRoleNavigationPermissions);
+      if (hasUserPermissionOnDescendant) {
+        child.children = await this.loadNavigationChildren(child, childPermission, userRoleNavigationPermissions);
       }
     }
     
     children = children.filter(child => {
-      const hasEditPermission = child['permissionName']?.includes('edit') ?? false;
+      const permission = child['permissionName'];
+      const hasEditPermission = permission?.includes('edit') ?? false;
       return (
         ((hasEditPermission && child.isDraft) || (!hasEditPermission && !child.isDraft)) &&
-        (!child.isDisabled || hasEditPermission)
+        (!child.isDisabled || hasEditPermission) && (permission || child.children)
       );
     });
 
@@ -201,19 +202,24 @@ export class NavigationService {
    * Check if user has access to one of the descendants of a given navigation.
    * 
    * @param navigation The navigation to check the descendants
-   * @param userRoleNavigationPermissions The array of user role navigation permissions.
-   * @returns True or false.
+   * @param userNavigationPermissions The array of user navigation permissions.
+   * @returns A promise of true or false.
    */
-  hasUserPermissionOnDescendants(
+  async hasUserPermissionOnDescendant(
     navigation: Navigation,
-    userRoleNavigationPermissions: Array<RoleNavigationPermission>
-  ): boolean {
-    const descendantPermission = userRoleNavigationPermissions.find(rnp =>
-      rnp.navigation.ancestorGroupIds?.includes(navigation.groupId)
-    );
+    userNavigationPermissions: Array<RoleNavigationPermission>
+  ): Promise<boolean> {
+    const descendants = await this._navigationRepository.find({
+      where: {
+        deletedDate: IsNull(),
+        ancestorGroupIds: ArrayContains([navigation.groupId])
+      }
+    });
 
-    if (descendantPermission) {
-      return true;
+    for (const descendant of descendants) {
+      if (userNavigationPermissions.find(rnp => rnp.navigationGroupId === descendant.groupId)) {
+        return true;
+      }
     }
 
     return false;

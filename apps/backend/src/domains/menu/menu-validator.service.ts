@@ -52,7 +52,7 @@ export class MenuValidatorService {
         !userNavigationPermissions.find(
           obj => obj.navigationGroupId === navigationAssociatedToMenu.groupId 
           && obj.permission.name.includes('edit')
-        ) || 
+        ) && 
         !userNavigationPermissions.find(
           obj => navigationAssociatedToMenu.ancestorGroupIds.includes(obj.navigationGroupId)
           && obj.permission.name.includes('edit')
@@ -73,7 +73,7 @@ export class MenuValidatorService {
         !userNavigationPermissions.find(
           obj => obj.navigationGroupId === navigation.groupId 
           && obj.permission.name.includes('edit')
-        ) || 
+        ) &&
         !userNavigationPermissions.find(
           obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId)
           && obj.permission.name.includes('edit')
@@ -113,7 +113,7 @@ export class MenuValidatorService {
         !userNavigationPermissions.find(
           obj => obj.navigationGroupId === navigation.groupId 
           && obj.permission.name.includes('edit')
-        ) || 
+        ) &&
         !userNavigationPermissions.find(
           obj => navigation.ancestorGroupIds.includes(obj.navigationGroupId)
           && obj.permission.name.includes('edit')

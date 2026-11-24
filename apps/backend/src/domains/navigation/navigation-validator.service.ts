@@ -69,7 +69,7 @@ export class NavigationValidatorService {
       !userNavigationPermissions.find(
         obj => obj.navigationGroupId === dbNavigation.groupId 
         && obj.permission.name.includes('edit')
-      ) || 
+      ) &&
       !userNavigationPermissions.find(
         obj => dbNavigation.ancestorGroupIds.includes(obj.navigationGroupId)
         && obj.permission.name.includes('edit')
