@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query, ForbiddenException } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
@@ -113,12 +113,12 @@ export class NavigationController {
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    await this._navigationValidatorService.validPublishPermission(
-      '00000000-0000-0000-0000-000000000000',
-      userNavigationPermissions
-    );
-
     for (const groupId of navigationGroupIds) {
+      await this._navigationValidatorService.validPublishPermission(
+        groupId,
+        userNavigationPermissions
+      );
+
       await this._navigationService.publishNavigation(groupId, userId);
     }
 
