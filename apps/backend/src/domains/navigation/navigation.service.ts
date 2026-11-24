@@ -70,10 +70,6 @@ export class NavigationService {
   async loadNestedNavigations(
     userRoleNavigationPermissions: Array<RoleNavigationPermission>
   ) {
-    if (userRoleNavigationPermissions.length === 0) {
-      throw new BadRequestException('User has no permission on any navigation');
-    }
-
     const { root, rootPermission } = await this.loadRootNavigation(userRoleNavigationPermissions);
     root.children = await this.loadNavigationChildren(root, rootPermission, userRoleNavigationPermissions);
     

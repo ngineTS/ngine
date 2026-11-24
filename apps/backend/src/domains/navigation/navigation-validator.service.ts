@@ -25,12 +25,12 @@ export class NavigationValidatorService {
    * @throws {ForbiddenException} If user doesn't have 'edit' permission on parent.
    */
   async validAddPermission(
-    createNavigationDto: CreateNavigationDto,
+    parentGroupId: string,
     userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const hasUserPermission = await this.validUserPermissionByNavigationGroupId(
       userNavigationPermissions,
-      createNavigationDto.parentGroupId,
+      parentGroupId,
       'edit'
     );
   
@@ -290,12 +290,16 @@ export class NavigationValidatorService {
    * @param navigationGroupId The navigation group id to check.
    * @param action The action.
    * @returns True if user has permission, false if not.
+   * @throws {BadRequestException} If navigation group id is null or undefined.
    */
   async validUserPermissionByNavigationGroupId(
     userNavigationPermissions: Array<RoleNavigationPermission>,
     navigationGroupId: string,
     action: string
   ) {
+    if (!navigationGroupId) {
+      throw new BadRequestException(`Navigation group id is undefined.`);
+    }
     /* 1. */
     if (
       userNavigationPermissions.find(

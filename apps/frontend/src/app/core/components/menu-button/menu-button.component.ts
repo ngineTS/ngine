@@ -168,6 +168,7 @@ export class MenuButtonComponent {
     moveItemInArray(navigation.children!, event.previousIndex, event.currentIndex)
     navigation.children!.forEach((nav, index) => { 
       navigationOrders.push({ 
+        parentGroupId: navigation.groupId,
         groupId: nav.groupId,
         order: index 
       });

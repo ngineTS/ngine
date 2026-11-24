@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, ParseArrayPipe, Query, ForbiddenException } from '@nestjs/common';
 import { NavigationService } from './navigation.service';
 import { CreateNavigationDto } from './dto/create-navigation.dto';
 import { UpdateNavigationDto } from './dto/update-navigation.dto';
+import { BulkUpdateNavigationDto } from './dto/bulk-update-navigation.dto';
 import { UserId } from 'src/core/decorators/user.decorator';
 import { Navigation } from './entities/navigation.entity';
 import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
@@ -24,7 +25,7 @@ export class NavigationController {
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     await this._navigationValidatorService.validAddPermission(
-      createNavigationDto,
+      createNavigationDto.parentGroupId,
       userNavigationPermissions
     );
     const parentNavigation = await this._navigationValidatorService.validNavigationDto(createNavigationDto);
@@ -68,12 +69,17 @@ export class NavigationController {
 
   @Post('bulk-update')
   async updateNavigations(
-    @Body() navigations: Array<Navigation>,
+    @Body(new ParseArrayPipe({
+      items: BulkUpdateNavigationDto,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }))
+    navigations: BulkUpdateNavigationDto[],
     @UserId() userId: string,
     @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     await this._navigationValidatorService.validAddPermission(
-      navigations[0],
+      navigations[0].parentGroupId,
       userNavigationPermissions
     );
     return this._navigationService.updateNavigations(navigations, userId);

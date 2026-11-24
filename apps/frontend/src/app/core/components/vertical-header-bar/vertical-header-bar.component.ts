@@ -330,6 +330,7 @@ export class VerticalHeaderBarComponent implements OnInit {
     moveItemInArray(navigation.children!, event.previousIndex, event.currentIndex)
     navigation.children!.forEach((nav, index) => { 
       navigationOrders.push({
+        parentGroupId: navigation.groupId,
         order: index,
         groupId: nav.groupId,
       });
