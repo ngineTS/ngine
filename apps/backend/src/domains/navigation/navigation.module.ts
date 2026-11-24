@@ -9,7 +9,6 @@ import { UserRole } from '../user-role/entities/user-role.entity';
 import { RoleService } from '../role/role.service';
 import { AuthService } from 'src/core/auth/auth.service';
 import { Role } from '../role/entities/role.entity';
-import { MenuService } from '../menu/menu.service';
 import { Menu } from '../menu/entities/menu.entity';
 import { ContainerLayout } from '../container-layout/entities/container-layout.entity';
 import { ContainerStyle } from '../container-style/entities/container-style.entity';
@@ -18,7 +17,6 @@ import { NavigationType } from '../navigation-type/entities/navigation-type.enti
 import { NavigationValidatorService } from './navigation-validator.service';
 import { RoleValidatorService } from '../role/role-validator.service';
 import { MenuValidatorService } from '../menu/menu-validator.service';
-import { ContainerLayoutService } from '../container-layout/container-layout.service';
 import { ContainerStyleService } from '../container-style/container-style.service';
 import { TypographyStyleService } from '../typography-style/typography-style.service';
 import { MenuModule } from '../menu/menu.module';

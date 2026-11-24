@@ -3,8 +3,9 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/domains/user/entities/user.entity';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Request } from 'express';
+import { RoleNavigationPermission } from 'src/domains/role-navigation-permission/entities/role-navigation-permission.entity';
 
 
 @Injectable()
@@ -23,23 +24,57 @@ export class AuthService {
    * @returns The JWT guest authentication token
    */
   async guestSignIn() {
-    const guestUser = await this._userRepository.findOne({
-      where: { name: 'guest' }
-    });
+    const guestUser = await this._userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.userRoles',
+        'userRoles',
+        'userRoles.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'userRoles.role',
+        'role',
+        'role.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'role.roleNavigationPermissions',
+        'roleNavigationPermissions',
+        'roleNavigationPermissions.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'roleNavigationPermissions.permission',
+        'permission',
+        'permission.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'roleNavigationPermissions.navigation',
+        'navigation',
+        'navigation.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'navigation.navigationType',
+        'navigationType',
+      )
+      .where('user.name = :guestName', { guestName: 'guest' })
+      .andWhere('user.deletedDate IS NULL')
+      .getOne();
+    
     if (!guestUser) {
       throw new NotFoundException('No guest user found.');
     }
 
+    const userNavigationPermissions = this.extractUserNavigationPermissions(guestUser);
+
     const payload = {
       sub: guestUser.id,
       userEmail: guestUser.emailAddress,
-      userNavigationPermissions: []
+      userNavigationPermissions: userNavigationPermissions
     };
 
     /* return access token. */
     const accessToken = await this.getAccessToken(payload);
     return { access_token: accessToken };
-  }           
+  }
 
   /**
    * Sign user in.
@@ -49,12 +84,42 @@ export class AuthService {
    * @returns The JWT authentication token.
    */
   async signIn(emailAddress: string, password: string) {
-    const user = await this._userRepository.findOne({
-        where: { 
-          emailAddress: emailAddress.toLowerCase(),
-          deletedDate: IsNull()
-        }
-    });
+    const user = await this._userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.userRoles',
+        'userRoles',
+        'userRoles.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'userRoles.role',
+        'role',
+        'role.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'role.roleNavigationPermissions',
+        'roleNavigationPermissions',
+        'roleNavigationPermissions.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'roleNavigationPermissions.permission',
+        'permission',
+        'permission.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'roleNavigationPermissions.navigation',
+        'navigation',
+        'navigation.deletedDate IS NULL'
+      )
+      .leftJoinAndSelect(
+        'navigation.navigationType',
+        'navigationType',
+      )
+      .where('user.emailAddress = :emailAddress', {
+        emailAddress: emailAddress.toLowerCase()
+      })
+      .andWhere('user.deletedDate IS NULL')
+      .getOne();
     
     if (!user) {
       throw new NotFoundException("This email address doesn't exist.");
@@ -69,10 +134,12 @@ export class AuthService {
       throw new BadRequestException("Your password is incorrect.");
     }
 
-    const payload = { 
+    const userNavigationPermissions = this.extractUserNavigationPermissions(user);
+
+    const payload = {
       sub: user.id,
       userEmail: user.emailAddress,
-      userNavigationPermissions: []  
+      userNavigationPermissions: userNavigationPermissions
     };
 
     /* Return access token. */
@@ -121,10 +188,7 @@ export class AuthService {
     payload: {
       sub: string, 
       userEmail: string
-      userNavigationPermissions: Array<{
-        navigationGroupId: string;
-        permissionName: string;
-      }>
+      userNavigationPermissions: Array<RoleNavigationPermission>
     }
   ): Promise<string> {
     return this._jwtService.signAsync(payload);
@@ -162,6 +226,27 @@ export class AuthService {
       .from(`${process.env.DB_SCHEMA}.auth_pack`, 'authPack')
       .orderBy('"order"', 'ASC')
       .execute();
+  }
+
+  /**
+   * Extract role navigation permissions from user roles.
+   * 
+   * @param user The user.
+   * @returns An array of role navigation permissions.
+   */
+  extractUserNavigationPermissions(user: User): Array<RoleNavigationPermission> {
+    const userRoleNavigationPermissionsByNavigationGroupId = new Map<string, RoleNavigationPermission>();
+    
+    user.userRoles.forEach(userRole => {
+      userRole.role.roleNavigationPermissions.forEach(rnp => {
+        const existingNavigation = userRoleNavigationPermissionsByNavigationGroupId.get(rnp.navigationGroupId);  
+        if (!existingNavigation || rnp.permission.priority < existingNavigation.permission.priority) {
+          userRoleNavigationPermissionsByNavigationGroupId.set(rnp.navigationGroupId, rnp);
+        }
+      });
+    });
+
+    return Array.from(userRoleNavigationPermissionsByNavigationGroupId.values());
   }
 
 }

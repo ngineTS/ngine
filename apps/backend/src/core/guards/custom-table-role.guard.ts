@@ -1,4 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, BadRequestException, NotFoundException } from '@nestjs/common';
+import { NavigationValidatorService } from 'src/domains/navigation/navigation-validator.service';
 import { DataSource } from 'typeorm';
 
 /**
@@ -9,7 +10,10 @@ import { DataSource } from 'typeorm';
 @Injectable()
 export class CustomTableRoleGuard implements CanActivate {
   
-  constructor(private _datasource: DataSource) { }
+  constructor(
+    private _datasource: DataSource,
+    private _navigationValidatorService: NavigationValidatorService
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     
@@ -20,47 +24,35 @@ export class CustomTableRoleGuard implements CanActivate {
     const method = request.method;
 
     switch (method) {
-
       case "GET":
-        if (
-          user.userNavigationPermissions
-            .find(obj => obj.navigationGroupId === params.navigationId)
-        ) {
-          return true;
-        }
-        return false;
+        return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+          user.userNavigationPermissions,
+          params.navigationId,
+          'view'
+        );
 
       case 'POST':
-        if (
-          user.userNavigationPermissions
-            .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
-            ?.includes('edit')
-        ) {
-          return true;
-        }
-        return false;
+        return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+          user.userNavigationPermissions,
+          body.navigationId,
+          'edit'
+        );
 
       case 'PATCH':
         const navigationIdPatchCase = await this.findNavigationIdByTableNameAndId(params.tableName, params.id);
-        if (
-          user.userNavigationPermissions
-            .find(obj => obj.navigationGroupId === navigationIdPatchCase)?.permissionName
-            ?.includes('edit')
-        ) {
-          return true;
-        }
-        return false;
+        return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+          user.userNavigationPermissions,
+          navigationIdPatchCase,
+          'edit'
+        );
 
       case 'DELETE':
         const navigationIdDeleteCase = await this.findNavigationIdByTableNameAndId(params.tableName, params.id);
-        if (
-          user.userNavigationPermissions
-            .find(obj => obj.navigationGroupId === navigationIdDeleteCase)?.permissionName
-            ?.includes('delete')
-        ) {
-          return true;
-        }
-        return false;
+        return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+          user.userNavigationPermissions,
+          navigationIdDeleteCase,
+          'delete'
+        );
     }
 
     return false;

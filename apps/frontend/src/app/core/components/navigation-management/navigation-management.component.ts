@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { Observable, switchMap, take } from 'rxjs';
+import { Observable, of, switchMap, take } from 'rxjs';
 import { AppService } from '../../services/app.service';
 import { SnackBarService } from '../../services/snackbar.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -211,17 +211,14 @@ export class NavigationManagementComponent implements OnInit {
         .saveNavigation(this.navigationForm.value, this.data.yPos)
         .pipe(take(1))
         .subscribe({
-          next: result => {
+          next: navigation => {
             this._snackbarService.showSuccessSnackBar('Element added successfully.');
-            //store new access token
-            localStorage.setItem('access_token', result.access_token);
             //push saved navigation to parent children
-            result.navigation.level = this.data.parent.level + 1;
             this.data.parent.children
-              ? this.data.parent.children.push(result.navigation)
-              : this.data.parent.children = [result.navigation];
+              ? this.data.parent.children.push(navigation)
+              : this.data.parent.children = [navigation];
             //close dialog providing navigation saved
-            this._dialogRef.close(result.navigation);
+            this._dialogRef.close(navigation);
           }
         });
     }
@@ -257,12 +254,16 @@ export class NavigationManagementComponent implements OnInit {
   updateNavigationBigSistersOrder(
     parentGroupId: string, 
     order: Navigation["order"]
-  ): Observable<Partial<Navigation>[]> {
+  ) {
     const navigationOrdersToUpdate: Partial<Navigation>[] = [];
     let bigSisterNavigations = this.flatNavigations.filter(obj => 
       obj.parentGroupId === parentGroupId && obj.order > order
     );
+    if (bigSisterNavigations.length === 0) {
+      return of(null);
+    }
     bigSisterNavigations.forEach(sister => navigationOrdersToUpdate.push({
+      parentGroupId: parentGroupId,
       groupId: sister.groupId,
       order: sister.order - 1
     }));

@@ -15,7 +15,6 @@ export class ComponentService {
   readonly componentStore: Record<string, () => Promise<any>> = {
     "my-quill-editor": () => import('./my-quill-editor/my-quill-editor.component'),
     "calendar": () => import('./calendar/calendar.component'),
-    "content-visualization": () => import('./content-visualization/content-visualization.component'),
     "analytic": () => import('./analytic/analytic.component'),
     "media-library": () => import('./media-library/media-library.component'),
     "user-management": () => import('./user-management/user-management.component'),

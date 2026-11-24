@@ -28,7 +28,7 @@ export class CustomTableService {
         .where('t."navigationId" = :navigationId', { navigationId })
         .orderBy(`"${orderBy}"`, order)
         .execute();
-      } catch (error) {
+      } catch (error: any) {
         throw new BadRequestException(`Error occurred while fetching content for table ${tableName}: ${error.message}`);
       }
     }
@@ -39,7 +39,7 @@ export class CustomTableService {
         .from(`${process.env.DB_SCHEMA}.${tableName}`, 't')
         .where('t."navigationId" = :navigationId', { navigationId })
         .execute();
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(`Error occurred while fetching content for table ${tableName}: ${error.message}`);
     }
   }
@@ -58,7 +58,7 @@ export class CustomTableService {
         .into(`${process.env.DB_SCHEMA}.${tableName}`)
         .values(payload)
         .execute();
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(`Error occurred while adding row to table ${tableName}: ${error.message}`);
     }
   }
@@ -78,7 +78,7 @@ export class CustomTableService {
         .set(payload)
         .where("id = :id", { id: id })
         .execute();
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(`Error occurred while updating row in table ${tableName}: ${error.message}`);
     }
   }
@@ -97,7 +97,7 @@ export class CustomTableService {
         .from(`${process.env.DB_SCHEMA}.${tableName}`)
         .where("id = :id", { id: id })
         .execute();
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(`Error occurred while deleting row from table ${tableName}: ${error.message}`);
     }
   }

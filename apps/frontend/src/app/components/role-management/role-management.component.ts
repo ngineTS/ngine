@@ -126,8 +126,8 @@ export class RoleManagementComponent extends NavigationBaseComponent implements 
   getAllRoles() {
     this._roleService.getAllRolesWithNavigationPermissions()
       .pipe(
-        retry(2), 
-        take(1)
+        retry(this._retryCount), 
+        take(this._takeCount)
       )
       .subscribe(resp => {
         this.roles = resp;

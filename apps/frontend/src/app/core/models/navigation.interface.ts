@@ -25,7 +25,6 @@ export interface Navigation extends Record<string, any> {
     containerLayout: ContainerLayout;
     containerStyle: ContainerStyle;
     typographyStyle: TypographyStyle;
-    level: number;
     children?: Navigation[];
     parent?: Navigation;
     permissionName?: PermissionName;

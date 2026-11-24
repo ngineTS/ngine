@@ -33,10 +33,8 @@ export class NavigationService {
      * @returns An observable of navigations.
      */
     getNestedNavigations() {
-        return this._http.get<{
-            navigation: Navigation,
-            access_token: string,
-        }>(`${environment.APIURL}navigation`).pipe(take(1));
+        return this._http.get<Navigation>(`${environment.APIURL}navigation`)
+            .pipe(take(1));
     }
 
     /**
@@ -60,11 +58,11 @@ export class NavigationService {
      */
     saveNavigation(navigations: Navigation, yPos?: number) {
         if(!yPos) {
-            return this._http.post<{ navigation: Navigation, access_token: string }>(`${environment.APIURL}navigation`, navigations);
+            return this._http.post<Navigation>(`${environment.APIURL}navigation`, navigations);
         }
 
         const params = new HttpParams().set('yPos', yPos);
-        return this._http.post<{ navigation: Navigation, access_token: string }>(`${environment.APIURL}navigation`, navigations, { params });
+        return this._http.post<Navigation>(`${environment.APIURL}navigation`, navigations, { params });
     }
 
     /**

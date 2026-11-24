@@ -86,6 +86,7 @@ export class UserService {
    * Assign super admin role to user if it is the first user of the app.
    * 
    * @param userId the user id.
+   * @returns user role saved or undefined if not first user.
    */
   async assignAdminRoleIfFirstUser(userId: string) {
     const users = await this._userRepository.find({ 
@@ -101,7 +102,7 @@ export class UserService {
         where: { name: 'super-admin' }
       });
 
-      await this._userRoleRepository.save({
+      return this._userRoleRepository.save({
         userId: userId,
         roleId: superAdminRole?.id,
       });
@@ -113,10 +114,10 @@ export class UserService {
    * If payment is required then don't assign role, instead return checkout session url.
    * 
    * Process:
-   * - CASE 1: User is first user of the app.
+   * - CASE 1: User is first user of the app -> assign admin role.
    * - CASE 2: If role is associated to a free pack -> assign role to user.
    * - CASE 3: If role is associated to a paid pack -> create stripe checkout session.
-   * - CASE 4: No role is passed -> assign guest role to the user.
+   * - CASE 4: No role provided and not first user -> assign guest role to the user.
    * 
    * @param userId The id of the user created.
    * @param roleId The id of the role to assign.
@@ -128,7 +129,7 @@ export class UserService {
     let checkoutUrl: { url: string | null } | null = null;
 
     /* CASE 1 */
-    await this.assignAdminRoleIfFirstUser(userId);
+    const adminRole = await this.assignAdminRoleIfFirstUser(userId);
     
     if (roleId) {
       const authPacks = await this._authService.getAuthPacks();
@@ -162,7 +163,7 @@ export class UserService {
       }
     }
     /* CASE 4 */
-    else {
+    else if (!adminRole) {
       const guestRole = await this._roleRepository.findOne({
         where: { name: 'guest' }
       });

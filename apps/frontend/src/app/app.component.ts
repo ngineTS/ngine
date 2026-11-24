@@ -158,7 +158,6 @@ export class AppComponent implements OnInit {
       }
       else {
         this._router.navigateByUrl('/unauthorised');
-        
       }
     }, this.refreshTokenIntervalOffset * 990);
   }

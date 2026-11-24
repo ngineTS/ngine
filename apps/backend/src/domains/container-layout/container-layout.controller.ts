@@ -2,9 +2,9 @@ import { Body, Controller, forwardRef, Inject, Param, ParseUUIDPipe, Patch } fro
 import { ContainerLayoutService } from './container-layout.service';
 import { UpdateContainerLayoutDto } from './dto/update-container-layout.dto';
 import { containerLayoutValidatorService } from './container-layout-validator.service';
-import { NavigationPermissions } from 'src/core/models/navigation-permissions.interface';
 import { UserNavigationPermissions } from 'src/core/decorators/user-navigation-permissions.decorator';
 import { NavigationService } from '../navigation/navigation.service';
+import { RoleNavigationPermission } from '../role-navigation-permission/entities/role-navigation-permission.entity';
 
 @Controller('container-layout')
 export class ContainerLayoutController {
@@ -20,7 +20,7 @@ export class ContainerLayoutController {
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateContainerLayoutDto: UpdateContainerLayoutDto,
-    @UserNavigationPermissions() userNavigationPermissions: NavigationPermissions
+    @UserNavigationPermissions() userNavigationPermissions: Array<RoleNavigationPermission>
   ) {
     const navigation = await this._containerLayoutValidatorService.validPermission(id, userNavigationPermissions);
     const updateResult = await this._containerLayoutService.update(id, updateContainerLayoutDto);

@@ -40,7 +40,7 @@
     >
       
       <!-- Header with logo and controls -->
-      @if (navigation.level === 0) {
+      @if (!navigation.parentGroupId) {
         <img class="logo" src="../../../../assets/images/ngine_logo.png" (click)="navigateToRootUrl()" />
       }
       
