@@ -328,7 +328,9 @@ export class VerticalHeaderBarComponent implements OnInit {
   drop(event: CdkDragDrop<Navigation[]>, navigation: Navigation): void {
     const navigationOrders: Partial<Navigation>[] = [];
     moveItemInArray(navigation.children!, event.previousIndex, event.currentIndex)
-    navigation.children!.forEach((nav, index) => { 
+    console.log('navigation children after move item in array', navigation.children);
+    navigation.children!.forEach((nav, index) => {
+      console.log('index', index);
       navigationOrders.push({
         parentGroupId: navigation.groupId,
         order: index,
