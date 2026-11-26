@@ -1,3 +1,7 @@
+@if (_appService.isGeneratingRouting) {
+  <mat-spinner diameter=90 class="loading-spinner"></mat-spinner>
+}
+
 @if (_componentsContainerService.activeNavigation) {
   <mat-drawer-container class="sidenav-container" [style.backgroundColor]="appBackgroundColor$ | async">
     <mat-drawer #drawer class="sidenav-content" mode="side">
@@ -39,7 +43,10 @@
           }     
 
           <!-- Add navigation button -->
-          @if (_componentsContainerService.activeNavigation.children?.length === 0) {
+          @if (
+            !_componentsContainerService.activeNavigation.children ||
+            _componentsContainerService.activeNavigation.children.length === 0
+          ) {
             <button class="global-button" [matMenuTriggerFor]="menu" matTooltip="Add component">
               <i class="bi bi-plus global-icon"></i>
             </button>

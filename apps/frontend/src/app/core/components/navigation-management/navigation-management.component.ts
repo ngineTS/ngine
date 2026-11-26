@@ -68,7 +68,7 @@ export class NavigationManagementComponent implements OnInit {
   isLoadingNavigationTypes = true;
   isLoadingFlatNavigations = true;
   navigationTypeImageUrlMap: Record<string, Observable<string>> = {};
-
+  isSaving = false;
 
   /**
    * Lifecycle hook called after the component has been initialized.
@@ -142,6 +142,7 @@ export class NavigationManagementComponent implements OnInit {
    */
   deleteNavigation() {
     if (confirm("Are you sure to delete this item? It will also delete sub items if there are.")) {
+      this.isSaving = true;
       if (this.data.navigation?.id) {
         this._navigationService.deleteNavigationAndChildren(this.data.navigation)
           .pipe(
@@ -163,6 +164,7 @@ export class NavigationManagementComponent implements OnInit {
    * In case of update, if parentGroupId has changed then update old big sisters order.
    */
   submitForm() {
+    this.isSaving = true;
     //EDIT
     if (this.data.navigation?.id) {
       //Parent has changed

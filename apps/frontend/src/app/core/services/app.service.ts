@@ -15,6 +15,8 @@ export class AppService {
     private _componentsContainerService: ComponentsContainerService
   ) { }
 
+  isGeneratingRouting = false;
+
   /**
    * Create route for each navigation and return final array of routes.
    * 
@@ -49,6 +51,7 @@ export class AppService {
    * @param redirectRouteName The name of the route to redirect after app routing creation.
    */
   createAppRouting(redirectRouteName?: string): void {
+    this.isGeneratingRouting = true;
     /** 1. Load nested navigations. */
     this._navigationService.getNestedNavigations().subscribe({
       next: navigation => {
@@ -87,6 +90,8 @@ export class AppService {
         else {
           this._router.initialNavigation();
         }
+
+        this.isGeneratingRouting = false;
       }
     });
   }
