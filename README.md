@@ -8,7 +8,7 @@ From this directory, run `docker compose up`
 
 ## Run the application locally
 
-1. Prerequisites: make sure PostgreSQL is running and available at `DB_HOST`/`DB_PORT` (defaults to `localhost:5432`) and Node.js (version >= 20) installed on your machine.
+1. Prerequisites: make sure PostgreSQL and Node.js (version >= 20) are installed on your machine.
    
 2. From this directory, install both apps dependencies with: `npm install`
 

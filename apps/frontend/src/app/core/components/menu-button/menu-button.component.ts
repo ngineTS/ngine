@@ -163,12 +163,12 @@ export class MenuButtonComponent {
    * 
    * @param event The CdkDragDrop event containing navigation positions.
    */
-  drop(event: CdkDragDrop<Navigation[]>, navigation: Navigation): void {
+  drop(event: CdkDragDrop<Navigation[]>, navigations: Array<Navigation>): void {
     const navigationOrders: Partial<Navigation>[] = [];
-    moveItemInArray(navigation.children!, event.previousIndex, event.currentIndex)
-    navigation.children!.forEach((nav, index) => { 
+    moveItemInArray(navigations, event.previousIndex, event.currentIndex)
+    navigations.forEach((nav, index) => { 
       navigationOrders.push({ 
-        parentGroupId: navigation.groupId,
+        parentGroupId: nav.parentGroupId,
         groupId: nav.groupId,
         order: index 
       });
