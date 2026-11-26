@@ -1,0 +1,35 @@
+.title {
+    margin: 32px;
+    text-align: center;
+}
+
+.description {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-left: 12vw;
+    padding-right: 12vw;
+    font-size: 18px;
+    text-align: center;
+}
+
+.tip-button {
+    background-color: transparent;
+    border: none;
+    height: fit-content;
+    width: fit-content;
+    padding: 0;
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+.github-sponsor {
+    border-radius: 16px;
+    background-color: transparent;
+    border-color: #2B2B2B;
+    padding: 12px;
+    height: fit-content;
+    margin-left: 36px;
+}

@@ -331,7 +331,7 @@ export class VerticalHeaderBarComponent implements OnInit {
       }
     }
     
-    navigations.forEach((nav, index) => { 
+    navigations.forEach((nav, index) => {
       navigationOrders.push({
         parentGroupId: nav.parentGroupId,
         order: index,

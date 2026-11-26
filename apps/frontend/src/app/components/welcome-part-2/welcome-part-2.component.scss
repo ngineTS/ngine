@@ -1,0 +1,21 @@
+.sentence {
+    font-size: 18px;
+}
+
+.get-started-button {
+    padding: 6px 12px;
+    background-color: transparent;
+    color: #E8E8E8;
+    border: 2px solid #e8e8e8;
+    border-radius: 24px;
+    border-left: hidden;
+    border-right: hidden;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+              0 8px 10px 1px rgba(0, 0, 0, 0.14),
+              0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.get-started-button:hover {
+    color: #985ab5;
+    border-color: #985ab5;
+}

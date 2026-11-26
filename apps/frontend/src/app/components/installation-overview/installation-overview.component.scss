@@ -1,0 +1,112 @@
+.architecture {
+  margin: 2rem 0;
+}
+
+.architecture__flow {
+  --architecture-gap: clamp(1.5rem, 5vw, 4rem);
+
+  display: flex;
+  align-items: stretch;
+  gap: var(--architecture-gap);
+  margin: 0;
+  padding: 1.5rem 0;
+  list-style: none;
+}
+
+.architecture__node {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 6rem;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  background-color: #985ab5;
+  color: #fff;
+  text-align: center;
+}
+
+.architecture__node:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  display: grid;
+  width: var(--architecture-gap);
+  color: #2b2b2b;
+  content: "→";
+  font-size: 1.5rem;
+  line-height: 1;
+  place-items: center;
+  transform: translateY(-50%);
+}
+
+.architecture__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.architecture__subtitle {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .architecture__flow {
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .architecture__node {
+    flex: none;
+    width: min(100%, 22rem);
+  }
+
+  .architecture__node:not(:last-child)::after {
+    top: 100%;
+    left: 50%;
+    width: auto;
+    height: 2.5rem;
+    content: "↓";
+    transform: translateX(-50%);
+  }
+}
+
+.installation-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border: 1px solid currentColor;
+  border-color: #2B2B2B;
+  border-radius: 1rem;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.installation-option:hover {
+  box-shadow: 0 0.75rem 1.75rem color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.installation-option__icon {
+  margin-bottom: 1rem;
+  color: #985AB5;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.installation-option:nth-child(2) .installation-option__icon {
+  color: #985AB5;
+}
+
+.installation-option__title {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.installation-option__description {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.75;
+}

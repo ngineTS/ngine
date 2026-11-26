@@ -1,0 +1,100 @@
+.docker-guide__intro {
+  max-width: 680px;
+  margin-bottom: 1.5rem;
+  line-height: 1.7;
+  opacity: 0.8;
+}
+
+.docker-guide__prerequisite {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(152, 90, 181, 0.2);
+  border-radius: 0.75rem;
+  background: rgba(152, 90, 181, 0.04);
+}
+
+.docker-guide__prerequisite i {
+  margin-top: 0.15rem;
+  color: #985ab5;
+}
+
+.docker-guide__prerequisite p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.docker-guide__steps {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docker-guide__step {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(120, 130, 160, 0.2);
+  border-radius: 0.85rem;
+}
+
+.docker-guide__step-number {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(152, 90, 181, 0.09);
+  color: #985ab5;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.docker-guide__step-content {
+  min-width: 0;
+}
+
+.docker-guide__step-content h6 {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.docker-guide__step-content p {
+  margin: 0 0 0.65rem;
+  line-height: 1.65;
+  opacity: 0.8;
+}
+
+.docker-guide__step-content p:last-child {
+  margin-bottom: 0;
+}
+
+.docker-guide__step-content pre {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border: 1px solid rgba(120, 130, 160, 0.18);
+  border-radius: 0.55rem;
+  background: rgba(120, 130, 160, 0.05);
+}
+
+.docker-guide__step-content pre code {
+  color: inherit;
+}
+
+@media (max-width: 480px) {
+  .docker-guide__step {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .docker-guide__step-number {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
