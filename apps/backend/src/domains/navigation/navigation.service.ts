@@ -153,7 +153,7 @@ export class NavigationService {
     });
 
     for (const child of children) {
-      let hasUserPermissionOnDescendant = true;
+      let hasUserPermissionOnNavigationOrDescendant = true;
 
       let childPermission = userRoleNavigationPermissions.find(rnp => 
         rnp.navigationGroupId === child.groupId
@@ -181,14 +181,27 @@ export class NavigationService {
       }
       // Case 5: child and parent permissions not found -> check if user has access to one of the descendants
       else {
-        hasUserPermissionOnDescendant = await this.hasUserPermissionOnDescendant(child, userRoleNavigationPermissions);
+        hasUserPermissionOnNavigationOrDescendant = await this.hasUserPermissionOnDescendant(child, userRoleNavigationPermissions);
       }
 
-      if (hasUserPermissionOnDescendant) {
-        child.children = await this.loadNavigationChildren(child, childPermission, userRoleNavigationPermissions);
+      if (hasUserPermissionOnNavigationOrDescendant) {
+        //if user has edit permission load children of draft record else load children of published record
+        //we do this to not duplicate the load of children
+        if (child['permissionName']?.includes('edit') && child.isDraft) {
+          child.children = await this.loadNavigationChildren(child, childPermission, userRoleNavigationPermissions);
+        }
+        if ((!child['permissionName'] || !child['permissionName'].includes('edit')) && !child.isDraft) {
+          child.children = await this.loadNavigationChildren(child, childPermission, userRoleNavigationPermissions);
+        }
       }
     }
     
+    /* 
+      Business rules:
+      - keep navigation if user has permission on it or if this navigation has children
+      - keep draft record if user has edit permission else keep published record
+      - keep disabled navigation if user has edit permission
+    */
     children = children.filter(child => {
       const permission = child['permissionName'];
       const hasEditPermission = permission?.includes('edit') ?? false;
