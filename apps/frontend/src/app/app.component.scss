@@ -91,3 +91,10 @@
   display: flex;
   justify-content: center;
 }
+
+.loading-spinner {
+  position: fixed;
+  left: 45%;
+  top: 40%;
+  z-index: 999999;
+}
