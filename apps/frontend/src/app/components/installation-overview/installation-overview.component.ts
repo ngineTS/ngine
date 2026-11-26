@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NavigationBaseComponent } from '../../core/components/navigation-base/navigation-base.component';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-installation-overview',
@@ -8,6 +9,13 @@ import { NavigationBaseComponent } from '../../core/components/navigation-base/n
 })
 export class InstallationOverviewComponent extends NavigationBaseComponent {
 
-  constructor() { super(); }
+  constructor(
+    private _router: Router,
+    private _route: ActivatedRoute
+  ) { super(); }
+
+  navigateTo(path: string) {
+    this._router.navigateByUrl(`documentation/${path}`);
+  }
 
 }
