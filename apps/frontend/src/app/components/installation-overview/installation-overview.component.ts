@@ -15,7 +15,7 @@ export class InstallationOverviewComponent extends NavigationBaseComponent {
   ) { super(); }
 
   navigateTo(path: string) {
-    this._router.navigateByUrl(`documentation/${path}`);
+    this._router.navigateByUrl(`documentation/installation/${path}`);
   }
 
 }
