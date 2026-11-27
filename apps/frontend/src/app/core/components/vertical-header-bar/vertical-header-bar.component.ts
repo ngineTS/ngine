@@ -311,25 +311,29 @@ export class VerticalHeaderBarComponent implements OnInit {
   }
 
   /**
-   * Recursively sort navigations by order.
-   */
-  sortNavigationsByOrder() {
-    this.navigation.children?.sort((a, b) => a.order - b.order);
-    this.navigation.children?.forEach(child => 
-      child.children?.sort((a, b) => a.order - b.order)
-    );
-  }
-
-  /**
    * Drop a navigation and update position of all navigations.
    * 
    * @param event The CdkDragDrop event containing navigation positions.
    */
-  drop(event: CdkDragDrop<Navigation[]>, navigation: Navigation): void {
+  drop(
+    event: CdkDragDrop<Navigation[]>,
+    navigations: Array<Navigation>
+  ): void {
     const navigationOrders: Partial<Navigation>[] = [];
-    moveItemInArray(navigation.children!, event.previousIndex, event.currentIndex)
-    navigation.children!.forEach((nav, index) => { 
+    const reorderableNavigations = navigations.filter(navigation => this.isReorderableNavigation(navigation));
+    
+    moveItemInArray(reorderableNavigations, event.previousIndex, event.currentIndex);
+
+    let reorderableIndex = 0;
+    for (let index = 0; index < navigations.length; index++) {
+      if (this.isReorderableNavigation(navigations[index])) {
+        navigations[index] = reorderableNavigations[reorderableIndex++];
+      }
+    }
+    
+    navigations.forEach((nav, index) => { 
       navigationOrders.push({
+        parentGroupId: nav.parentGroupId,
         order: index,
         groupId: nav.groupId,
       });
@@ -338,4 +342,9 @@ export class VerticalHeaderBarComponent implements OnInit {
     this._navigationService.bulkUpdateNavigations(navigationOrders).subscribe(() => {});
   }
 
+  private isReorderableNavigation(navigation: Navigation): boolean {
+    return navigation.navigationType.name === 'redirect-button' ||
+      navigation.navigationType.name === 'dialog-button' ||
+      navigation.navigationType.name === 'external-link-button';
+  }
 }

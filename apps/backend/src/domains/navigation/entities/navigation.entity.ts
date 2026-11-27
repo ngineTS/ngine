@@ -48,7 +48,10 @@ export class Navigation {
     isDraft: boolean;
 
     @Column({ type: 'text', array: true })
-    unpublishedChanges: Array<string>
+    unpublishedChanges: Array<string>;
+
+    @Column({ type: 'text', array: true })
+    ancestorGroupIds: Array<string>;
 
     @Column()
     createdBy: string;

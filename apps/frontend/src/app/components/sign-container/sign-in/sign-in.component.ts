@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, Optional, signal } from '@angular/core';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
@@ -7,6 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { AppService } from '../../../core/services/app.service';
 import { SnackBarService } from '../../../core/services/snackbar.service';
+import { SignContainerComponent } from '../sign-container.component';
+import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-sign-in',
@@ -32,9 +34,12 @@ export class SignInComponent {
   hidePassword = signal(true);
 
 
-  constructor(public _authService: AuthService,
-              private _appService: AppService,
-              private _snackbarService: SnackBarService) { }
+  constructor(
+    public _authService: AuthService,
+    private _appService: AppService,
+    private _snackbarService: SnackBarService,
+    @Optional() private _dialogRef: MatDialogRef<SignContainerComponent> | null,
+  ) { }
 
 
   isSignInDisabled() {
@@ -53,6 +58,7 @@ export class SignInComponent {
       next: (resp: any) => {
         localStorage.setItem('access_token', resp['access_token']);
         this._snackbarService.showSuccessSnackBar('Login successfuly.')
+        this._dialogRef?.close();
         this._appService.createAppRouting('/');
       },
       error: (err /*NestJS error type*/) => {

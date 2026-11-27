@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@n
 import { Reflector } from '@nestjs/core';
 import { Feature, NavigationTypeNameArray, Action } from '../decorators/role.decorator';
 import { DataSource } from 'typeorm';
+import { NavigationValidatorService } from 'src/domains/navigation/navigation-validator.service';
 
 /**
  * The idea, here, is to link a navigation to the action applied by the user.
@@ -24,7 +25,8 @@ export class RolesGuard implements CanActivate {
   
   constructor(
     private _reflector: Reflector,
-    private _datasource: DataSource
+    private _datasource: DataSource,
+    private _navigationValidatorService: NavigationValidatorService
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -42,39 +44,36 @@ export class RolesGuard implements CanActivate {
 
     switch (action) {
 
-      case "view":
+      case 'view':
         const navigationGroupId = params.navigationGroupId ?? params.navigationId;
-        /* if we look for a specific navigation id */
+        /* if we look for a specific navigation group id */
         if (navigationGroupId) {
-          if (user.userNavigationPermissions?.find(obj => obj.navigationGroupId === navigationGroupId)) {
-            return true;
-          }
-          else {
-            return false;
-          }
+          return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+            user.userNavigationPermissions,
+            navigationGroupId,
+            'view'
+          );
         }
-        /* if we look for a specific id then find navigation id associated */
+        /* if we look for a specific id then find navigation group id associated */
         if (params.id && entity) {
           const data = await this.findNavigationInTableById(entity, params.id);
           if (!data) {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
           if (data.navigationId) {
-            if (user.userNavigationPermissions.find(obj => obj.navigationGroupId === data.navigationId)) {
-              return true;
-            }
-            else {
-              return false;
-            }
+            return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+              user.userNavigationPermissions,
+              data.navigationId,
+              'view'
+            );
           }
         }
         /* if table not aggregated by navigationId then check for navigation type only */
-        if (user.userNavigationPermissions.find(obj => navigationTypeNameArray.includes(obj.navigationTypeName))) {
-          return true;
-        }
-        else {
-          return false;
-        }
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
+          navigationTypeNameArray,
+          user.userNavigationPermissions,
+          'view'
+        );
 
       case 'edit':
         /* if we look for a specific id then find navigation id associated. */
@@ -84,44 +83,35 @@ export class RolesGuard implements CanActivate {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
           if (data.navigationId) {
-            if (
-              user.userNavigationPermissions
-                .find(obj => obj.navigationGroupId === data.navigationId)
-                ?.permissionName?.includes('edit')
-            ) {
-              return true;
-            }
-            else {
-              return false;
-            }
+            return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+              user.userNavigationPermissions,
+              data.navigationId,
+              'edit'
+            );
           }
         }
         /* if table not aggregated by navigationId then check for navigationType only */
-        if (
-          user.userNavigationPermissions
-            .find(obj => navigationTypeNameArray.includes(obj.navigationTypeName))?.permissionName
-            ?.includes('edit')
-        ) {
-          return true;
-        }
-        else {
-          return false;
-        }
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
+          navigationTypeNameArray,
+          user.userNavigationPermissions,
+          'edit'
+        );
 
       case 'add':
         /* if we pass a body then look for navigation id inside body props. */
         if (body?.navigationId) {
-          if (
-            user.userNavigationPermissions
-              .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
-              ?.includes('edit')
-          ) {
-            return true;
-          }
-          else {
-            return false;
-          }
+          return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+            user.userNavigationPermissions,
+            body.navigationId,
+            'edit'
+          );
         }
+        /* if table not aggregated by navigationId then check for navigationType only */
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
+          navigationTypeNameArray,
+          user.userNavigationPermissions,
+          'edit'
+        );
 
       case 'delete':
         /* if we look for a specific id then find navigation id associated. */
@@ -131,45 +121,28 @@ export class RolesGuard implements CanActivate {
             throw new NotFoundException(`Id ${params.id} not found.`);
           }
           if (data.navigationId) {
-            if (
-              user.userNavigationPermissions
-                ?.find(obj => obj.navigationGroupId === data.navigationId)?.permissionName
-                ?.includes('delete')
-            ) {
-              return true;
-            }
-            else {
-              return false;
-            }
+            return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+              user.userNavigationPermissions,
+              data.navigationId,
+              'delete'
+            );
           }
         }
         /* if we pass a body then look for navigation id inside body props. */
         if (body?.navigationId) {
-          if (
-            user.userNavigationPermissions
-              .find(obj => obj.navigationGroupId === body.navigationId)?.permissionName
-              ?.includes('delete')
-          ) {
-            return true;
-          }
-          else {
-            return false;
-          }
+          return this._navigationValidatorService.validUserPermissionByNavigationGroupId(
+            user.userNavigationPermissions,
+            body.navigationId,
+            'delete'
+          );
         }
         /* if table not aggregated by navigationId then check for navigationType only */
-        if (
-          user.userNavigationPermissions
-            .find(obj =>  navigationTypeNameArray.includes(obj.navigationTypeName))?.permissionName
-            ?.includes('delete')
-        ) {
-          return true;
-        }
-        else {
-          return false;
-        }
+        return this._navigationValidatorService.validUserPermissionByNavigationType(
+          navigationTypeNameArray,
+          user.userNavigationPermissions,
+          'delete'
+        );
     }
-
-    return false;
   }
 
   /**

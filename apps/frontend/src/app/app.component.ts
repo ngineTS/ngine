@@ -25,6 +25,7 @@ import { CdkDrag } from '@angular/cdk/drag-drop';
 import { NavigationPublishDialogComponent } from './core/components/navigation-publish-dialog/navigation-publish-dialog.component';
 import { StyleService } from './core/services/style.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 @Component({
@@ -37,7 +38,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     GenericFormComponent,
     AsyncPipe,
     CdkDrag,
-    MatTooltipModule
+    MatTooltipModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -45,7 +47,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 export class AppComponent implements OnInit {
 
   constructor(
-    private _appService: AppService,
+    public _appService: AppService,
     private _appSettingsService: AppSettingsService,
     private _router: Router,
     private _authService: AuthService,
@@ -158,7 +160,6 @@ export class AppComponent implements OnInit {
       }
       else {
         this._router.navigateByUrl('/unauthorised');
-        
       }
     }, this.refreshTokenIntervalOffset * 990);
   }

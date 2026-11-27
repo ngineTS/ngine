@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Optional } from '@angular/core';
 import { UserSignUpPayload } from '../../../core/models/user.interface';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +8,8 @@ import { AppService } from '../../../core/services/app.service';
 import { SnackBarService } from '../../../core/services/snackbar.service';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthPack } from '../../authentication-management/auth-pack.interface';
+import { MatDialogRef } from '@angular/material/dialog';
+import { SignContainerComponent } from '../sign-container.component';
 
 
 @Component({
@@ -33,6 +35,7 @@ export class SignUpComponent {
     public _authService: AuthService, 
     private _appService: AppService,
     private _snackbarService: SnackBarService,
+    @Optional() private _dialogRef: MatDialogRef<SignContainerComponent> | null,
   ) { }
 
   ngOnInit(): void {
@@ -64,6 +67,7 @@ export class SignUpComponent {
     this._authService
       .userSignUp(this.userForm)
       .subscribe((resp: any) => {
+        this._dialogRef?.close();
         if (resp['access_token']) {
           localStorage.setItem('access_token', resp['access_token']);
           this._snackbarService.showSuccessSnackBar("Welcome!");

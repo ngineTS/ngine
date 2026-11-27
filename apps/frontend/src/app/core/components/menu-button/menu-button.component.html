@@ -37,7 +37,7 @@
         [style.border-left-style]="navigation.menu.containerStyle.isBorderLeftHidden ?
             'none' : navigation.menu.containerStyle.borderStyle"
         cdkDropList
-        (cdkDropListDropped)="drop($event, navigation)"
+        (cdkDropListDropped)="drop($event, navigation.children!)"
         [cdkDropListData]="navigation.children!"
         [cdkDropListDisabled]="!navigation.permissionName?.includes('edit') || !(initialWindowWidth > windowWidthLimit)"
     >
@@ -204,7 +204,7 @@
                     [style.border-left-style]="navigation.menu.containerStyle.isBorderLeftHidden ?
                         'none' : navigation.menu.containerStyle.borderStyle"
                     cdkDropList
-                    (cdkDropListDropped)="drop($event, navigation)"
+                    (cdkDropListDropped)="drop($event, navigation.children!)"
                     [cdkDropListData]="navigation.children!"
                     [cdkDropListDisabled]="!navigation.permissionName?.includes('edit') || !(initialWindowWidth > windowWidthLimit)"
                 >
